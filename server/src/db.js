@@ -14,9 +14,25 @@ const CREATE_QUEUE_ENTRIES_TABLE = `
   )
 `;
 
+const CREATE_ARREST_REQUESTS_TABLE = `
+  CREATE TABLE IF NOT EXISTS arrest_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    targetName TEXT NOT NULL,
+    status TEXT NOT NULL,
+    priceCents INTEGER NOT NULL,
+    durationMinutes INTEGER NOT NULL,
+    paymentStatus TEXT NOT NULL,
+    createdAt TEXT NOT NULL,
+    paidAt TEXT,
+    acceptedAt TEXT,
+    rejectedAt TEXT
+  )
+`;
+
 export function openDatabase(databasePath = process.env.DATABASE_PATH ?? defaultDatabasePath) {
   const database = new DatabaseConstructor(databasePath);
   database.pragma("journal_mode = WAL");
   database.exec(CREATE_QUEUE_ENTRIES_TABLE);
+  database.exec(CREATE_ARREST_REQUESTS_TABLE);
   return database;
 }

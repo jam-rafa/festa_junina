@@ -1,12 +1,21 @@
 import { Router } from "express";
+import { requireAdmin } from "./authMiddleware.js";
 
-export function createQueueRouter(queueController) {
+export function createApiRouter(queueController, arrestRequestController, authController, authService) {
   const router = Router();
+  const adminOnly = requireAdmin(authService);
 
   router.get("/queue", queueController.listGuests);
-  router.post("/queue", queueController.addGuest);
-  router.put("/queue/:id", queueController.updateGuest);
-  router.delete("/queue/:id", queueController.removeGuest);
+  router.post("/auth/admin/login", authController.login);
+  router.post("/arrest-requests", arrestRequestController.createRequest);
+
+  router.get("/arrest-requests", adminOnly, arrestRequestController.listRequests);
+  router.post("/queue", adminOnly, queueController.addGuest);
+  router.put("/queue/:id", adminOnly, queueController.updateGuest);
+  router.delete("/queue/:id", adminOnly, queueController.removeGuest);
+  router.post("/arrest-requests/:id/confirm-payment", adminOnly, arrestRequestController.confirmPayment);
+  router.post("/arrest-requests/:id/accept", adminOnly, arrestRequestController.acceptRequest);
+  router.post("/arrest-requests/:id/reject", adminOnly, arrestRequestController.rejectRequest);
 
   return router;
 }

@@ -2,6 +2,10 @@ services:
   server:
     build: ./server
     restart: unless-stopped
+    environment:
+      ADMIN_PIN: "${ADMIN_PIN:-1234}"
+      JWT_SECRET: "${JWT_SECRET:-dev-secret-change-me}"
+      JWT_EXPIRES_IN: "${JWT_EXPIRES_IN:-12h}"
     volumes:
       - queue-data:/app/data
 
@@ -15,3 +19,6 @@ services:
 
 volumes:
   queue-data:
+
+
+# ADMIN_PIN=2468 JWT_SECRET=minha-chave-secreta docker compose -f docker-compose.dev.yml up --build
