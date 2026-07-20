@@ -1,0 +1,32 @@
+services:
+  server:
+    build: ./server
+    command: npm run dev
+    environment:
+      DATABASE_PATH: /app/data/fila.db
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server/src:/app/src
+      - queue-data:/app/data
+
+  client:
+    build:
+      context: ./client
+      target: build
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      BACKEND_URL: http://server:3000
+    ports:
+      - "${VITE_PORT:-5174}:5173"
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+      - ./client/index.html:/app/index.html
+      - ./client/vite.config.js:/app/vite.config.js
+    depends_on:
+      - server
+
+volumes:
+  queue-data:
