@@ -1,0 +1,17 @@
+services:
+  server:
+    build: ./server
+    restart: unless-stopped
+    volumes:
+      - queue-data:/app/data
+
+  client:
+    build: ./client
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - server
+
+volumes:
+  queue-data:

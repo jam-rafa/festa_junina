@@ -1,0 +1,5 @@
+node_modules/
+server/fila.db
+server/fila.db-shm
+server/fila.db-wal
+client/dist/

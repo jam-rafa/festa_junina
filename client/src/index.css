@@ -1,0 +1,90 @@
+:root {
+  --text: #1f2023;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --accent: #2f7d32;
+  --ready-bg: #d9f7d9;
+  font: 18px/1.4 system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #e5e4e7;
+    --bg: #16171d;
+    --border: #2e303a;
+    --accent: #5cc75f;
+    --ready-bg: #1f4d20;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.painel table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.4em;
+}
+
+.painel th,
+.painel td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.guest-row--ready {
+  background: var(--ready-bg);
+  font-weight: bold;
+}
+
+.new-guest-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.new-guest-form input {
+  flex: 1;
+  min-width: 100px;
+  padding: 8px;
+}
+
+.guest-list {
+  list-style: none;
+  padding: 0;
+}
+
+.guest-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.guest-item span:first-child {
+  flex: 1;
+  font-weight: bold;
+}
+
+.error-message {
+  color: #c0392b;
+  width: 100%;
+}
+
+button {
+  cursor: pointer;
+  padding: 8px 12px;
+}
