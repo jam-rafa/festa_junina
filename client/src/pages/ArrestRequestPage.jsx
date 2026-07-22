@@ -47,7 +47,9 @@ export function ArrestRequestPage() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <label className="block">
-              <span className="text-sm font-semibold text-stone-800">Nome do procurado</span>
+              <span className="text-sm font-semibold text-stone-800">
+                Nome do procurado
+              </span>
               <input
                 className="mt-2 w-full rounded-md border border-stone-300 px-4 py-3 text-base outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
                 type="text"
@@ -75,8 +77,8 @@ export function ArrestRequestPage() {
 
           {createdRequest && (
             <div className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
-              Pedido enviado para o ADM confirmar o pagamento e organizar a prisão de{" "}
-              <strong>{createdRequest.targetName}</strong>.
+              Pedido enviado para o ADM confirmar o pagamento e organizar a
+              prisão de <strong>{createdRequest.targetName}</strong>.
             </div>
           )}
         </div>

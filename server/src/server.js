@@ -13,16 +13,34 @@ import { QueueController } from "./queueController.js";
 import { ArrestRequestController } from "./arrestRequestController.js";
 import { AuthController } from "./authController.js";
 import { AuthService } from "./authService.js";
+import { EventSettingsRepository } from "./eventSettingsRepository.js";
+import { EventSettingsService } from "./eventSettingsService.js";
+import { EventSettingsController } from "./eventSettingsController.js";
 import { createApiRouter } from "./routes.js";
 import { handleRequestErrors } from "./errorHandler.js";
 
 const PORT = process.env.PORT ?? 3000;
 
-function createApp(queueController, arrestRequestController, authController, authService) {
+function createApp(
+  queueController,
+  arrestRequestController,
+  authController,
+  eventSettingsController,
+  authService
+) {
   const app = express();
   app.use(cors());
   app.use(express.json());
-  app.use("/api", createApiRouter(queueController, arrestRequestController, authController, authService));
+  app.use(
+    "/api",
+    createApiRouter(
+      queueController,
+      arrestRequestController,
+      authController,
+      eventSettingsController,
+      authService
+    )
+  );
   app.use(handleRequestErrors);
   return app;
 }
@@ -34,6 +52,7 @@ function startServer() {
     new ArrestRequestRepository(database),
     queueService
   );
+  const eventSettingsService = new EventSettingsService(new EventSettingsRepository(database));
 
   const socketIoServer = new SocketIoServer({ cors: { origin: "*" } });
   const authService = new AuthService();
@@ -41,13 +60,20 @@ function startServer() {
 
   const queueController = new QueueController(queueService, realtimeGateway);
   const authController = new AuthController(authService);
+  const eventSettingsController = new EventSettingsController(eventSettingsService, realtimeGateway);
   const arrestRequestController = new ArrestRequestController(
     arrestRequestService,
     queueService,
     realtimeGateway
   );
   const httpServer = createServer(
-    createApp(queueController, arrestRequestController, authController, authService)
+    createApp(
+      queueController,
+      arrestRequestController,
+      authController,
+      eventSettingsController,
+      authService
+    )
   );
   socketIoServer.attach(httpServer);
 

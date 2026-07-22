@@ -29,10 +29,18 @@ const CREATE_ARREST_REQUESTS_TABLE = `
   )
 `;
 
+const CREATE_EVENT_SETTINGS_TABLE = `
+  CREATE TABLE IF NOT EXISTS event_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )
+`;
+
 export function openDatabase(databasePath = process.env.DATABASE_PATH ?? defaultDatabasePath) {
   const database = new DatabaseConstructor(databasePath);
   database.pragma("journal_mode = WAL");
   database.exec(CREATE_QUEUE_ENTRIES_TABLE);
   database.exec(CREATE_ARREST_REQUESTS_TABLE);
+  database.exec(CREATE_EVENT_SETTINGS_TABLE);
   return database;
 }

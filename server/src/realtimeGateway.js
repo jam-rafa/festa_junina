@@ -1,5 +1,6 @@
 const QUEUE_UPDATED_EVENT = "queue:updated";
 const ARREST_REQUESTS_UPDATED_EVENT = "arrest-requests:updated";
+const EVENT_SCREEN_BANNER_UPDATED_EVENT = "event-screen:banner-updated";
 const ADMIN_ROOM = "admin";
 
 export class RealtimeGateway {
@@ -15,6 +16,10 @@ export class RealtimeGateway {
 
   broadcastArrestRequestsUpdated(requests) {
     this.socketIoServer.to(ADMIN_ROOM).emit(ARREST_REQUESTS_UPDATED_EVENT, requests);
+  }
+
+  broadcastEventScreenBannerUpdated(screenBanner) {
+    this.socketIoServer.emit(EVENT_SCREEN_BANNER_UPDATED_EVENT, screenBanner);
   }
 
   registerAdminSockets() {
