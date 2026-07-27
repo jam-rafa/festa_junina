@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAdmin } from "./authMiddleware.js";
+import { attachUploadedImagePath, uploadArrestRequestImage } from "./uploadMiddleware.js";
 
 export function createApiRouter(
   queueController,
@@ -13,7 +14,12 @@ export function createApiRouter(
 
   router.get("/queue", queueController.listGuests);
   router.post("/auth/admin/login", authController.login);
-  router.post("/arrest-requests", arrestRequestController.createRequest);
+  router.post(
+    "/arrest-requests",
+    uploadArrestRequestImage,
+    attachUploadedImagePath,
+    arrestRequestController.createRequest
+  );
   router.get("/event-screen/banner", eventSettingsController.getScreenBanner);
 
   router.get("/arrest-requests", adminOnly, arrestRequestController.listRequests);

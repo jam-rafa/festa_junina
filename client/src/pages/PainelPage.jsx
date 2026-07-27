@@ -8,7 +8,18 @@ function GuestRow({ guest, now }) {
 
   return (
     <tr className={isReady ? "guest-row guest-row--ready" : "guest-row"}>
-      <td>{guest.guestName}</td>
+      <td>
+        <div className="flex items-center gap-3">
+          {guest.targetImagePath ? (
+            <img
+              className="h-14 w-14 rounded-md object-cover"
+              src={guest.targetImagePath}
+              alt={`Foto de ${guest.guestName}`}
+            />
+          ) : null}
+          <span>{guest.guestName}</span>
+        </div>
+      </td>
       <td>{isReady ? "Liberado!" : `${remainingMinutes} min`}</td>
     </tr>
   );

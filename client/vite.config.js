@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': BACKEND_URL,
+      '/uploads': BACKEND_URL,
       '/socket.io': { target: BACKEND_URL, ws: true },
     },
   },

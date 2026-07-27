@@ -5,12 +5,14 @@ export class QueueRepository {
     this.database = database;
   }
 
-  create({ guestName, holdDurationMinutes, enteredAt }) {
+  create({ guestName, targetImagePath = null, holdDurationMinutes, enteredAt }) {
     const result = this.database
       .prepare(
-        "INSERT INTO queue_entries (guestName, holdDurationMinutes, enteredAt) VALUES (?, ?, ?)"
+        `INSERT INTO queue_entries
+          (guestName, targetImagePath, holdDurationMinutes, enteredAt)
+         VALUES (?, ?, ?, ?)`
       )
-      .run(guestName, holdDurationMinutes, enteredAt);
+      .run(guestName, targetImagePath, holdDurationMinutes, enteredAt);
     return this.findById(result.lastInsertRowid);
   }
 

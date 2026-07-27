@@ -6,6 +6,7 @@ import {
   addGuestToQueue,
   clearAdminToken,
   confirmArrestRequestPayment,
+  createArrestRequest,
   getAdminToken,
   loginAdmin,
   rejectArrestRequest,
@@ -13,6 +14,7 @@ import {
   updateGuestInQueue,
 } from "../api/queueApi.js";
 import { updateEventScreenBanner } from "../api/eventScreenApi.js";
+import { ArrestRequestForm } from "../components/ArrestRequestForm.jsx";
 import {
   EVENT_SCREEN_BANNERS,
   findEventScreenBannerById,
@@ -132,7 +134,7 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
   return (
     <article className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-base font-black text-stone-950">{request.targetName}</h3>
           <p className="mt-1 text-sm text-stone-600">
             {formatCurrencyFromCents(request.priceCents)} por {request.durationMinutes} min
@@ -148,6 +150,14 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
           {isPaymentConfirmed ? "Pago" : "Pendente"}
         </span>
       </div>
+
+      {request.targetImagePath ? (
+        <img
+          className="mt-4 aspect-[4/3] w-full rounded-lg border border-stone-200 object-cover"
+          src={request.targetImagePath}
+          alt={`Foto de ${request.targetName}`}
+        />
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <AdminButton
@@ -178,6 +188,30 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
         </div>
       </div>
     </article>
+  );
+}
+
+function NewArrestRequestForm({ onError }) {
+  async function handleSubmit(formValues) {
+    try {
+      const createdRequest = await createArrestRequest(formValues);
+      onError(null);
+      return createdRequest;
+    } catch (error) {
+      onError(error.message);
+      throw error;
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+      <h3 className="text-base font-black text-stone-950">Novo pedido</h3>
+      <ArrestRequestForm
+        onSubmit={handleSubmit}
+        submitLabel="Criar pedido"
+        submittingLabel="Criando..."
+      />
+    </div>
   );
 }
 
@@ -388,13 +422,20 @@ function GuestListItem({ guest, onError }) {
   return (
     <li className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h3 className="text-base font-black text-stone-950">{guest.guestName}</h3>
           <p className="mt-1 text-sm font-semibold text-stone-600">
             {calculateRemainingMinutes(guest, new Date())} min restantes
           </p>
         </div>
       </div>
+      {guest.targetImagePath ? (
+        <img
+          className="mt-4 aspect-[4/3] w-full rounded-lg border border-stone-200 object-cover"
+          src={guest.targetImagePath}
+          alt={`Foto de ${guest.guestName}`}
+        />
+      ) : null}
       <div className="mt-4 grid grid-cols-2 gap-2">
         <AdminButton type="button" variant="secondary" onClick={() => setIsEditing(true)}>
           Editar
@@ -538,6 +579,7 @@ export function AdminPage() {
               description="Priorize pagamento e prisão sem rolar a tela inteira."
             />
             <div className="space-y-3">
+              <NewArrestRequestForm onError={setErrorMessage} />
               {pendingRequests.length === 0 ? (
                 <EmptyState>Nenhum pedido de prisão pendente.</EmptyState>
               ) : (

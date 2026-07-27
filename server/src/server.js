@@ -3,6 +3,7 @@ import cors from "cors";
 import { createServer } from "node:http";
 import { Server as SocketIoServer } from "socket.io";
 
+import { uploadStoragePath } from "./uploadStorage.js";
 import { openDatabase } from "./db.js";
 import { QueueRepository } from "./queueRepository.js";
 import { QueueService } from "./queueService.js";
@@ -30,6 +31,7 @@ function createApp(
 ) {
   const app = express();
   app.use(cors());
+  app.use("/uploads", express.static(uploadStoragePath));
   app.use(express.json());
   app.use(
     "/api",

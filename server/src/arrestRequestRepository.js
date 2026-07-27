@@ -5,14 +5,30 @@ export class ArrestRequestRepository {
     this.database = database;
   }
 
-  create({ targetName, status, priceCents, durationMinutes, paymentStatus, createdAt }) {
+  create({
+    targetName,
+    targetImagePath = null,
+    status,
+    priceCents,
+    durationMinutes,
+    paymentStatus,
+    createdAt,
+  }) {
     const result = this.database
       .prepare(
         `INSERT INTO arrest_requests
-          (targetName, status, priceCents, durationMinutes, paymentStatus, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?)`
+          (targetName, targetImagePath, status, priceCents, durationMinutes, paymentStatus, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
-      .run(targetName, status, priceCents, durationMinutes, paymentStatus, createdAt);
+      .run(
+        targetName,
+        targetImagePath,
+        status,
+        priceCents,
+        durationMinutes,
+        paymentStatus,
+        createdAt
+      );
     return this.findById(result.lastInsertRowid);
   }
 

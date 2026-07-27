@@ -17,6 +17,14 @@ function assertValidEntry({ guestName, holdDurationMinutes }) {
   assertValidHoldDuration(holdDurationMinutes);
 }
 
+function normalizeTargetImagePath(targetImagePath) {
+  if (typeof targetImagePath !== "string" || targetImagePath.trim().length === 0) {
+    return null;
+  }
+
+  return targetImagePath.trim();
+}
+
 function calculateReleaseAtMs(guest) {
   return new Date(guest.enteredAt).getTime() + guest.holdDurationMinutes * 60_000;
 }
@@ -30,10 +38,11 @@ export class QueueService {
     this.queueRepository = queueRepository;
   }
 
-  addGuest({ guestName, holdDurationMinutes }) {
+  addGuest({ guestName, targetImagePath, holdDurationMinutes }) {
     assertValidEntry({ guestName, holdDurationMinutes });
     return this.queueRepository.create({
       guestName: guestName.trim(),
+      targetImagePath: normalizeTargetImagePath(targetImagePath),
       holdDurationMinutes,
       enteredAt: new Date().toISOString(),
     });

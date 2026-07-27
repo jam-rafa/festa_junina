@@ -20,6 +20,14 @@ function assertValidTargetName(targetName) {
   }
 }
 
+function normalizeTargetImagePath(targetImagePath) {
+  if (typeof targetImagePath !== "string" || targetImagePath.trim().length === 0) {
+    return null;
+  }
+
+  return targetImagePath.trim();
+}
+
 function assertPendingRequest(request) {
   if (request.status !== REQUEST_STATUS.PENDING) {
     throw new ValidationError("Apenas pedidos pendentes podem ser alterados");
@@ -32,10 +40,11 @@ export class ArrestRequestService {
     this.queueService = queueService;
   }
 
-  createRequest({ targetName }) {
+  createRequest({ targetName, targetImagePath }) {
     assertValidTargetName(targetName);
     return this.arrestRequestRepository.create({
       targetName: targetName.trim(),
+      targetImagePath: normalizeTargetImagePath(targetImagePath),
       status: REQUEST_STATUS.PENDING,
       priceCents: ARREST_REQUEST_PRICE_CENTS,
       durationMinutes: ARREST_REQUEST_DURATION_MINUTES,
@@ -67,6 +76,7 @@ export class ArrestRequestService {
     const acceptedRequest = this.arrestRequestRepository.accept(id, new Date().toISOString());
     const queuedGuest = this.queueService.addGuest({
       guestName: acceptedRequest.targetName,
+      targetImagePath: acceptedRequest.targetImagePath,
       holdDurationMinutes: acceptedRequest.durationMinutes,
     });
 

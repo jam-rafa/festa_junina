@@ -72,6 +72,22 @@ test("aceita pedido pago e cria preso com duração padrão", () => {
   assert.equal(guests[0].guestName, "Ana");
 });
 
+test("mantém imagem do pedido quando cria o preso", () => {
+  const { arrestRequestService, queueService } = createServices();
+  const request = arrestRequestService.createRequest({
+    targetName: "Bia",
+    targetImagePath: "/uploads/arrest-requests/bia.webp",
+  });
+  arrestRequestService.confirmPayment(request.id);
+
+  const result = arrestRequestService.acceptRequest(request.id);
+  const guests = queueService.listGuests();
+
+  assert.equal(result.request.targetImagePath, "/uploads/arrest-requests/bia.webp");
+  assert.equal(result.queuedGuest.targetImagePath, "/uploads/arrest-requests/bia.webp");
+  assert.equal(guests[0].targetImagePath, "/uploads/arrest-requests/bia.webp");
+});
+
 test("recusa pedido pendente", () => {
   const { arrestRequestService } = createServices();
   const request = arrestRequestService.createRequest({ targetName: "Bruno" });

@@ -1,3 +1,5 @@
+import { removeUploadedFile } from "./uploadStorage.js";
+
 export class ArrestRequestController {
   constructor(arrestRequestService, queueService, realtimeGateway) {
     this.arrestRequestService = arrestRequestService;
@@ -10,9 +12,15 @@ export class ArrestRequestController {
   };
 
   createRequest = (request, response) => {
-    const createdRequest = this.arrestRequestService.createRequest(request.body);
-    this.broadcastCurrentRequests();
-    response.status(201).json(createdRequest);
+    try {
+      const createdRequest = this.arrestRequestService.createRequest(request.body);
+      this.broadcastCurrentRequests();
+      this.realtimeGateway.broadcastEventScreenArrestRequestCreated(createdRequest);
+      response.status(201).json(createdRequest);
+    } catch (error) {
+      removeUploadedFile(request.file?.path);
+      throw error;
+    }
   };
 
   confirmPayment = (request, response) => {

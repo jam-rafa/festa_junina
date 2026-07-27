@@ -19,10 +19,21 @@ function getAdminHeaders() {
 }
 
 async function parseJsonOrThrow(response) {
-  const body = await response.json();
-  if (!response.ok) {
-    throw new Error(body.message ?? "Erro inesperado no servidor");
+  const responseText = await response.text();
+  let body = null;
+
+  if (responseText) {
+    try {
+      body = JSON.parse(responseText);
+    } catch {
+      body = { message: responseText };
+    }
   }
+
+  if (!response.ok) {
+    throw new Error(body?.message ?? `Erro inesperado no servidor (${response.status})`);
+  }
+
   return body;
 }
 
@@ -65,10 +76,7 @@ export async function removeGuestFromQueue(id) {
     method: "DELETE",
     headers: getAdminHeaders(),
   });
-  if (!response.ok) {
-    const body = await response.json();
-    throw new Error(body.message ?? "Erro inesperado no servidor");
-  }
+  await parseJsonOrThrow(response);
 }
 
 export async function fetchArrestRequests() {
@@ -78,11 +86,16 @@ export async function fetchArrestRequests() {
   return parseJsonOrThrow(response);
 }
 
-export async function createArrestRequest({ targetName }) {
+export async function createArrestRequest({ targetName, targetImage }) {
+  const formData = new FormData();
+  formData.append("targetName", targetName);
+  if (targetImage) {
+    formData.append("targetImage", targetImage);
+  }
+
   const response = await fetch(`${API_BASE_PATH}/arrest-requests`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ targetName }),
+    body: formData,
   });
   return parseJsonOrThrow(response);
 }
