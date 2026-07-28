@@ -31,6 +31,9 @@ function createApp(
 ) {
   const app = express();
   app.use(cors());
+  app.get("/healthz", (_request, response) => {
+    response.status(200).json({ status: "ok" });
+  });
   app.use("/uploads", express.static(uploadStoragePath));
   app.use(express.json());
   app.use(

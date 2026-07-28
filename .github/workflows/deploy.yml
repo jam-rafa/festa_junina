@@ -1,0 +1,31 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy on KVM
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.KVM_HOST }}
+          username: ${{ secrets.KVM_USER }}
+          key: ${{ secrets.KVM_SSH_KEY }}
+          port: ${{ secrets.KVM_PORT }}
+          script: |
+            set -e
+            cd /var/www/html/festa-junina
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose up -d --build
+            docker image prune -f
+            curl -f http://localhost:${HTTP_PORT:-8080}/healthz
