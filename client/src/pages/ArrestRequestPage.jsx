@@ -31,7 +31,7 @@ export function ArrestRequestPage() {
       <section className="mx-auto flex min-h-[calc(100dvh-48px)] max-w-md flex-col justify-center">
         <div className="rounded-lg border border-amber-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wide text-red-700">
-            Cadeia da festa deploy
+            Cadeia da festa
           </p>
           <h1 className="mt-2 text-3xl font-bold">Pedir prisão</h1>
           <p className="mt-3 text-base text-stone-700">

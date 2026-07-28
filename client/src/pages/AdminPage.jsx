@@ -539,7 +539,7 @@ export function AdminPage() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
                 Administração
               </p>
-              <h1 className="mt-1 text-2xl font-black">Cadeia da festa</h1>
+              <h1 className="mt-1 text-2xl font-black">Cadeia da festa deploy</h1>
               <p className="mt-1 text-sm text-red-100">Painel rápido para operar pelo celular</p>
             </div>
             <button
