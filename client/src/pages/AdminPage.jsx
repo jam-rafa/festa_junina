@@ -95,7 +95,7 @@ function AdminLogin({ onLogin }) {
       <section className="mx-auto flex min-h-[calc(100dvh-48px)] max-w-sm flex-col justify-center">
         <form onSubmit={handleSubmit} className="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wide text-red-700">
-            Administração 2
+            Administração 
           </p>
           <h1 className="mt-2 text-3xl font-bold">Acesso do ADM</h1>
           <label className="mt-6 block">
