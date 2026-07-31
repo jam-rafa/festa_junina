@@ -12,9 +12,10 @@ export function useRealtimeArrestRequests({ enabled = true } = {}) {
       return undefined;
     }
 
-    fetchArrestRequests().then(setRequests);
+    const refreshRequests = () => fetchArrestRequests().then(setRequests);
 
     const socket = io({ auth: { token: getAdminToken() } });
+    socket.on("connect", refreshRequests);
     socket.on(ARREST_REQUESTS_UPDATED_EVENT, setRequests);
 
     return () => socket.disconnect();

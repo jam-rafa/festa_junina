@@ -12,9 +12,10 @@ export function useRealtimeQueue({ enabled = true } = {}) {
       return undefined;
     }
 
-    fetchQueue().then(setGuests);
+    const refreshQueue = () => fetchQueue().then(setGuests);
 
     const socket = io();
+    socket.on("connect", refreshQueue);
     socket.on(QUEUE_UPDATED_EVENT, setGuests);
 
     return () => socket.disconnect();

@@ -13,11 +13,12 @@ export function useEventScreenBanner({ enabled = true } = {}) {
       return undefined;
     }
 
-    fetchEventScreenBanner()
+    const refreshBanner = () => fetchEventScreenBanner()
       .then((screenBanner) => setBannerId(screenBanner.bannerId))
       .catch(() => setBannerId(DEFAULT_EVENT_SCREEN_BANNER_ID));
 
     const socket = io();
+    socket.on("connect", refreshBanner);
     socket.on(EVENT_SCREEN_BANNER_UPDATED_EVENT, ({ bannerId: nextBannerId }) => {
       setBannerId(nextBannerId);
     });

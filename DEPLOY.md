@@ -103,14 +103,38 @@ sudo systemctl reload caddy
 ```
 
 Se usar Nginx como proxy reverso na VM, aumente o limite de upload para permitir fotos em
-`/api/arrest-requests`. A API limita imagens a 3 MB, entao deixe o proxy um pouco acima disso:
+`/api/arrest-requests` e configure timeouts longos para o Socket.IO:
 
 ```nginx
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
 server {
-  client_max_body_size 4m;
+  client_max_body_size 8m;
 
   location / {
     proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
+  location /socket.io/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 1h;
+    proxy_send_timeout 1h;
+    proxy_buffering off;
   }
 }
 ```
