@@ -33,20 +33,17 @@ function formatCurrencyFromCents(valueInCents) {
 
 function EmptyState({ children }) {
   return (
-    <div className="rounded-xl border border-dashed border-stone-300 bg-white px-4 py-6 text-center text-sm font-medium text-stone-500">
+    <div className="rounded-lg border border-dashed border-stone-300 bg-white px-3 py-4 text-center text-sm font-medium text-stone-500">
       {children}
     </div>
   );
 }
 
-function SectionTitle({ title, count, description }) {
+function SectionTitle({ title, count }) {
   return (
-    <div className="mb-3 flex items-start justify-between gap-3">
-      <div>
-        <h2 className="text-lg font-black text-stone-950">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-stone-600">{description}</p> : null}
-      </div>
-      <span className="rounded-full bg-stone-200 px-2.5 py-1 text-xs font-bold text-stone-700">
+    <div className="mb-2 flex items-center justify-between gap-3">
+      <h2 className="text-base font-black text-stone-950">{title}</h2>
+      <span className="rounded-full bg-stone-200 px-2 py-0.5 text-xs font-bold text-stone-700">
         {count}
       </span>
     </div>
@@ -63,7 +60,7 @@ function AdminButton({ children, variant = "secondary", ...props }) {
 
   return (
     <button
-      className={`w-full rounded-lg px-3 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed ${variants[variant]}`}
+      className={`w-full rounded-md px-2.5 py-2 text-xs font-bold transition disabled:cursor-not-allowed ${variants[variant]}`}
       {...props}
     >
       {children}
@@ -132,41 +129,49 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
   const isPaymentConfirmed = request.paymentStatus === "confirmed";
 
   return (
-    <article className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-stone-950">{request.targetName}</h3>
-          <p className="mt-1 text-sm text-stone-600">
-            {formatCurrencyFromCents(request.priceCents)} por {request.durationMinutes} min
-          </p>
+    <article className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <div className="flex gap-3">
+        {request.targetImagePath ? (
+          <img
+            className="h-16 w-16 shrink-0 rounded-md border border-stone-200 object-cover"
+            src={request.targetImagePath}
+            alt={`Foto de ${request.targetName}`}
+          />
+        ) : (
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border border-dashed border-stone-300 bg-stone-50 text-xs font-bold text-stone-400">
+            Foto
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-black text-stone-950">{request.targetName}</h3>
+              <p className="mt-0.5 text-xs font-semibold text-stone-600">
+                {formatCurrencyFromCents(request.priceCents)} · {request.durationMinutes} min
+              </p>
+            </div>
+            <span
+              className={
+                isPaymentConfirmed
+                  ? "shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-800"
+                  : "shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800"
+              }
+            >
+              {isPaymentConfirmed ? "Pago" : "Pendente"}
+            </span>
+          </div>
         </div>
-        <span
-          className={
-            isPaymentConfirmed
-              ? "rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-800"
-              : "rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800"
-          }
-        >
-          {isPaymentConfirmed ? "Pago" : "Pendente"}
-        </span>
       </div>
 
-      {request.targetImagePath ? (
-        <img
-          className="mt-4 aspect-[4/3] w-full rounded-lg border border-stone-200 object-cover"
-          src={request.targetImagePath}
-          alt={`Foto de ${request.targetName}`}
-        />
-      ) : null}
-
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-3 gap-2">
         <AdminButton
           type="button"
           variant="success"
           onClick={() => onConfirmPayment(request.id)}
           disabled={isBusy || isPaymentConfirmed}
         >
-          Confirmar pagamento
+          Pagar
         </AdminButton>
         <AdminButton
           type="button"
@@ -176,22 +181,22 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
         >
           Prender
         </AdminButton>
-        <div className="col-span-2">
-          <AdminButton
-            type="button"
-            variant="danger"
-            onClick={() => onReject(request.id)}
-            disabled={isBusy}
-          >
-            Recusar pedido
-          </AdminButton>
-        </div>
+        <AdminButton
+          type="button"
+          variant="danger"
+          onClick={() => onReject(request.id)}
+          disabled={isBusy}
+        >
+          Recusar
+        </AdminButton>
       </div>
     </article>
   );
 }
 
 function NewArrestRequestForm({ onError }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   async function handleSubmit(formValues) {
     try {
       const createdRequest = await createArrestRequest(formValues);
@@ -204,18 +209,31 @@ function NewArrestRequestForm({ onError }) {
   }
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-black text-stone-950">Novo pedido</h3>
-      <ArrestRequestForm
-        onSubmit={handleSubmit}
-        submitLabel="Criar pedido"
-        submittingLabel="Criando..."
-      />
+    <div className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <button
+        className="flex w-full items-center justify-between gap-3 text-left text-sm font-black text-stone-950"
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span>Novo pedido</span>
+        <span className="rounded-full bg-stone-900 px-2 py-1 text-xs font-bold text-white">
+          {isOpen ? "Fechar" : "Abrir"}
+        </span>
+      </button>
+      {isOpen ? (
+        <ArrestRequestForm
+          onSubmit={handleSubmit}
+          submitLabel="Criar pedido"
+          submittingLabel="Criando..."
+          onSuccess={() => setIsOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
 
 function NewGuestForm({ onError }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [holdDurationMinutes, setHoldDurationMinutes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -227,6 +245,7 @@ function NewGuestForm({ onError }) {
       await addGuestToQueue({ guestName, holdDurationMinutes: Number(holdDurationMinutes) });
       setGuestName("");
       setHoldDurationMinutes("");
+      setIsOpen(false);
       onError(null);
     } catch (error) {
       onError(error.message);
@@ -236,13 +255,23 @@ function NewGuestForm({ onError }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <h3 className="text-base font-black text-stone-950">Adicionar preso</h3>
-      <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_120px]">
+    <form onSubmit={handleSubmit} className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <button
+        className="flex w-full items-center justify-between gap-3 text-left text-sm font-black text-stone-950"
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <span>Adicionar preso</span>
+        <span className="rounded-full bg-stone-900 px-2 py-1 text-xs font-bold text-white">
+          {isOpen ? "Fechar" : "Abrir"}
+        </span>
+      </button>
+      {isOpen ? (
+      <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_96px]">
         <label className="block sm:col-span-2">
-          <span className="text-sm font-semibold text-stone-700">Nome</span>
+          <span className="text-xs font-bold text-stone-700">Nome</span>
           <input
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
             type="text"
             value={guestName}
             onChange={(event) => setGuestName(event.target.value)}
@@ -250,9 +279,9 @@ function NewGuestForm({ onError }) {
           />
         </label>
         <label className="block">
-          <span className="text-sm font-semibold text-stone-700">Minutos</span>
+          <span className="text-xs font-bold text-stone-700">Minutos</span>
           <input
-            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+            className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
             type="number"
             value={holdDurationMinutes}
             onChange={(event) => setHoldDurationMinutes(event.target.value)}
@@ -266,6 +295,7 @@ function NewGuestForm({ onError }) {
           </AdminButton>
         </div>
       </div>
+      ) : null}
     </form>
   );
 }
@@ -296,25 +326,13 @@ function EventScreenBannerForm({ onError }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-black text-stone-950">Banner do telão</h3>
-          <p className="mt-1 text-sm text-stone-600">
-            Escolha a arte exibida em tempo real na rota <strong>/telao</strong>.
-          </p>
-        </div>
+    <form onSubmit={handleSubmit} className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-black text-stone-950">Banner do telão</h3>
+        <span className="truncate text-xs font-bold text-stone-500">{selectedBanner.label}</span>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
-        <div
-          className="aspect-video w-full bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${selectedBanner.imageUrl})` }}
-          aria-label={`Preview do banner ${selectedBanner.label}`}
-        />
-      </div>
-
-      <div className="mt-4 grid gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         {EVENT_SCREEN_BANNERS.map((banner) => {
           const isSelected = banner.id === selectedBannerId;
 
@@ -323,12 +341,12 @@ function EventScreenBannerForm({ onError }) {
               key={banner.id}
               className={
                 isSelected
-                  ? "flex cursor-pointer items-center gap-3 rounded-xl border-2 border-red-700 bg-red-50 p-3"
-                  : "flex cursor-pointer items-center gap-3 rounded-xl border border-stone-200 bg-white p-3"
+                  ? "cursor-pointer rounded-lg border-2 border-red-700 bg-red-50 p-2"
+                  : "cursor-pointer rounded-lg border border-stone-200 bg-white p-2"
               }
             >
               <input
-                className="h-4 w-4 accent-red-700"
+                className="sr-only"
                 type="radio"
                 name="event-screen-banner"
                 value={banner.id}
@@ -336,20 +354,17 @@ function EventScreenBannerForm({ onError }) {
                 onChange={(event) => setSelectedBannerId(event.target.value)}
               />
               <div
-                className="aspect-video w-28 rounded-md border border-stone-200 bg-cover bg-center bg-no-repeat"
+                className="aspect-video w-full rounded-md border border-stone-200 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url(${banner.imageUrl})` }}
                 aria-hidden="true"
               />
-              <div>
-                <p className="text-sm font-bold text-stone-950">{banner.label}</p>
-                <p className="text-xs text-stone-500">{banner.id}</p>
-              </div>
+              <p className="mt-1 truncate text-xs font-bold text-stone-950">{banner.label}</p>
             </label>
           );
         })}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <AdminButton
           type="submit"
           variant="secondary"
@@ -392,15 +407,15 @@ function GuestListItem({ guest, onError }) {
 
   if (isEditing) {
     return (
-      <li className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3">
+      <li className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+        <div className="grid gap-2">
           <input
-            className="rounded-md border border-stone-300 px-3 py-2 outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
             value={guestName}
             onChange={(event) => setGuestName(event.target.value)}
           />
           <input
-            className="rounded-md border border-stone-300 px-3 py-2 outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
             type="number"
             value={holdDurationMinutes}
             onChange={(event) => setHoldDurationMinutes(event.target.value)}
@@ -420,23 +435,23 @@ function GuestListItem({ guest, onError }) {
   }
 
   return (
-    <li className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-stone-950">{guest.guestName}</h3>
-          <p className="mt-1 text-sm font-semibold text-stone-600">
+    <li className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <div className="flex gap-3">
+        {guest.targetImagePath ? (
+          <img
+            className="h-14 w-14 shrink-0 rounded-md border border-stone-200 object-cover"
+            src={guest.targetImagePath}
+            alt={`Foto de ${guest.guestName}`}
+          />
+        ) : null}
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-black text-stone-950">{guest.guestName}</h3>
+          <p className="mt-0.5 text-xs font-semibold text-stone-600">
             {calculateRemainingMinutes(guest, new Date())} min restantes
           </p>
         </div>
       </div>
-      {guest.targetImagePath ? (
-        <img
-          className="mt-4 aspect-[4/3] w-full rounded-lg border border-stone-200 object-cover"
-          src={guest.targetImagePath}
-          alt={`Foto de ${guest.guestName}`}
-        />
-      ) : null}
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <AdminButton type="button" variant="secondary" onClick={() => setIsEditing(true)}>
           Editar
         </AdminButton>
@@ -448,22 +463,6 @@ function GuestListItem({ guest, onError }) {
   );
 }
 
-function SummaryCard({ label, value, tone = "default" }) {
-  const tones = {
-    default: "bg-white text-stone-950 ring-stone-200",
-    urgent: "bg-red-50 text-red-900 ring-red-200",
-    success: "bg-green-50 text-green-900 ring-green-200",
-    accent: "bg-amber-50 text-amber-900 ring-amber-200",
-  };
-
-  return (
-    <div className={`rounded-xl px-3 py-3 ring-1 ${tones[tone]}`}>
-      <p className="text-xs font-bold uppercase tracking-wide opacity-70">{label}</p>
-      <p className="mt-1 text-2xl font-black">{value}</p>
-    </div>
-  );
-}
-
 function AdminSectionTabs({ activeSection, onChange, pendingRequestsCount, guestsCount }) {
   const items = [
     { id: "requests", label: "Pedidos", count: pendingRequestsCount },
@@ -472,8 +471,8 @@ function AdminSectionTabs({ activeSection, onChange, pendingRequestsCount, guest
   ];
 
   return (
-    <div className="sticky top-0 z-10 -mx-1 rounded-2xl bg-[#f7ecd0]/95 px-1 py-1 backdrop-blur supports-[backdrop-filter]:bg-[#f7ecd0]/85">
-      <div className="grid grid-cols-3 gap-2">
+    <div className="sticky top-0 z-10 -mx-1 bg-[#f7ecd0]/95 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-[#f7ecd0]/85">
+      <div className="grid grid-cols-3 gap-1 rounded-lg border border-stone-200 bg-white p-1 shadow-sm">
         {items.map((item) => {
           const isActive = item.id === activeSection;
 
@@ -482,14 +481,13 @@ function AdminSectionTabs({ activeSection, onChange, pendingRequestsCount, guest
               key={item.id}
               className={
                 isActive
-                  ? "rounded-xl bg-stone-900 px-3 py-3 text-sm font-black text-white shadow-sm"
-                  : "rounded-xl bg-white px-3 py-3 text-sm font-bold text-stone-700 ring-1 ring-stone-200"
+                  ? "rounded-md bg-stone-900 px-2 py-2 text-xs font-black text-white shadow-sm"
+                  : "rounded-md px-2 py-2 text-xs font-bold text-stone-700"
               }
               type="button"
               onClick={() => onChange(item.id)}
             >
-              <span className="block">{item.label}</span>
-              <span className="mt-1 block text-xs opacity-80">{item.count}</span>
+              {item.label} <span className="opacity-75">{item.count}</span>
             </button>
           );
         })}
@@ -531,35 +529,28 @@ export function AdminPage() {
   }
 
   return (
-    <main className="max-w-none bg-[#f7ecd0] px-4 py-4 text-stone-950">
-      <div className="mx-auto max-w-xl space-y-4">
-        <header className="rounded-2xl bg-[#8f2f1f] px-4 pb-4 pt-5 text-white shadow-sm">
-          <div className="flex items-start justify-between gap-3">
+    <main className="max-w-none bg-[#f7ecd0] px-3 py-3 text-stone-950">
+      <div className="mx-auto max-w-xl space-y-3">
+        <header className="rounded-lg bg-[#8f2f1f] px-3 py-3 text-white shadow-sm">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-200">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-amber-200">
                 Administração
               </p>
-              <h1 className="mt-1 text-2xl font-black">Cadeia da festa deploy</h1>
-              <p className="mt-1 text-sm text-red-100">Painel rápido para operar pelo celular</p>
+              <h1 className="text-lg font-black">Cadeia da festa</h1>
             </div>
             <button
-              className="rounded-xl bg-white/95 px-3 py-2 text-sm font-bold text-stone-800 shadow-sm"
+              className="rounded-md bg-white/95 px-3 py-2 text-xs font-bold text-stone-800 shadow-sm"
               type="button"
               onClick={handleLogout}
             >
               Sair
             </button>
           </div>
-
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <SummaryCard label="Pendentes" value={pendingRequests.length} tone="urgent" />
-            <SummaryCard label="Presos" value={guests.length} tone="accent" />
-            <SummaryCard label="Telão" value={EVENT_SCREEN_BANNERS.length} tone="default" />
-          </div>
         </header>
 
         {errorMessage && (
-          <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
             {errorMessage}
           </p>
         )}
@@ -576,9 +567,8 @@ export function AdminPage() {
             <SectionTitle
               title="Pedidos de prisão"
               count={pendingRequests.length}
-              description="Priorize pagamento e prisão sem rolar a tela inteira."
             />
-            <div className="space-y-3">
+            <div className="space-y-2">
               <NewArrestRequestForm onError={setErrorMessage} />
               {pendingRequests.length === 0 ? (
                 <EmptyState>Nenhum pedido de prisão pendente.</EmptyState>
@@ -603,14 +593,13 @@ export function AdminPage() {
             <SectionTitle
               title="Presos atuais"
               count={guests.length}
-              description="Adicione, ajuste ou remova presos com menos toques."
             />
-            <div className="space-y-3">
+            <div className="space-y-2">
               <NewGuestForm onError={setErrorMessage} />
               {guests.length === 0 ? (
                 <EmptyState>Ninguém está preso agora.</EmptyState>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {guests.map((guest) => (
                     <GuestListItem key={guest.id} guest={guest} onError={setErrorMessage} />
                   ))}
@@ -625,7 +614,6 @@ export function AdminPage() {
             <SectionTitle
               title="Telão do evento"
               count={EVENT_SCREEN_BANNERS.length}
-              description="Troque a arte do telão sem sair do painel."
             />
             <EventScreenBannerForm onError={setErrorMessage} />
           </section>
