@@ -102,6 +102,26 @@ Recarregue:
 sudo systemctl reload caddy
 ```
 
+Se usar Nginx como proxy reverso na VM, aumente o limite de upload para permitir fotos em
+`/api/arrest-requests`. A API limita imagens a 3 MB, entao deixe o proxy um pouco acima disso:
+
+```nginx
+server {
+  client_max_body_size 4m;
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+  }
+}
+```
+
+Depois recarregue:
+
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
 ## 6. Atualizar uma versao
 
 ```bash
