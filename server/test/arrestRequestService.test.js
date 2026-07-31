@@ -88,6 +88,36 @@ test("mantém imagem do pedido quando cria o preso", () => {
   assert.equal(guests[0].targetImagePath, "/uploads/arrest-requests/bia.webp");
 });
 
+test("reutiliza imagem anterior de pedido da mesma pessoa", () => {
+  const { arrestRequestService } = createServices();
+  const previousRequest = arrestRequestService.createRequest({
+    targetName: "João da Silva",
+    targetImagePath: "/uploads/arrest-requests/joao.webp",
+  });
+  const nextRequest = arrestRequestService.createRequest({ targetName: "Joao da Silva" });
+
+  const updatedRequest = arrestRequestService.reuseImageFromRequest(
+    nextRequest.id,
+    previousRequest.id
+  );
+
+  assert.equal(updatedRequest.targetImagePath, "/uploads/arrest-requests/joao.webp");
+});
+
+test("impede reutilizar foto de outra pessoa", () => {
+  const { arrestRequestService } = createServices();
+  const previousRequest = arrestRequestService.createRequest({
+    targetName: "Ana",
+    targetImagePath: "/uploads/arrest-requests/ana.webp",
+  });
+  const nextRequest = arrestRequestService.createRequest({ targetName: "Bia" });
+
+  assert.throws(
+    () => arrestRequestService.reuseImageFromRequest(nextRequest.id, previousRequest.id),
+    ValidationError
+  );
+});
+
 test("recusa pedido pendente", () => {
   const { arrestRequestService } = createServices();
   const request = arrestRequestService.createRequest({ targetName: "Bruno" });

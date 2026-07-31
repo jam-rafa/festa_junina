@@ -22,6 +22,7 @@ function createRouter() {
         listRequests: noop,
         createRequest: noop,
         confirmPayment: noop,
+        reuseImageFromRequest: noop,
         acceptRequest: noop,
         rejectRequest: noop,
       },

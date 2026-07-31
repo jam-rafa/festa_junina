@@ -56,6 +56,14 @@ export class ArrestRequestRepository {
     return this.findById(id);
   }
 
+  updateTargetImagePath(id, targetImagePath) {
+    this.findById(id);
+    this.database
+      .prepare("UPDATE arrest_requests SET targetImagePath = ? WHERE id = ?")
+      .run(targetImagePath, id);
+    return this.findById(id);
+  }
+
   accept(id, acceptedAt) {
     this.findById(id);
     this.database

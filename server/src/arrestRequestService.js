@@ -28,6 +28,14 @@ function normalizeTargetImagePath(targetImagePath) {
   return targetImagePath.trim();
 }
 
+function normalizeComparableName(name) {
+  return name
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 function assertPendingRequest(request) {
   if (request.status !== REQUEST_STATUS.PENDING) {
     throw new ValidationError("Apenas pedidos pendentes podem ser alterados");
@@ -64,6 +72,29 @@ export class ArrestRequestService {
       return request;
     }
     return this.arrestRequestRepository.confirmPayment(id, new Date().toISOString());
+  }
+
+  reuseImageFromRequest(id, sourceRequestId) {
+    const request = this.arrestRequestRepository.findById(id);
+    assertPendingRequest(request);
+
+    if (request.targetImagePath) {
+      throw new ValidationError("Este pedido já tem foto");
+    }
+
+    const sourceRequest = this.arrestRequestRepository.findById(sourceRequestId);
+    if (!sourceRequest.targetImagePath) {
+      throw new ValidationError("O pedido escolhido não tem foto para reutilizar");
+    }
+
+    if (
+      normalizeComparableName(sourceRequest.targetName) !==
+      normalizeComparableName(request.targetName)
+    ) {
+      throw new ValidationError("A foto anterior precisa ser da mesma pessoa");
+    }
+
+    return this.arrestRequestRepository.updateTargetImagePath(id, sourceRequest.targetImagePath);
   }
 
   acceptRequest(id) {

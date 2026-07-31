@@ -11,6 +11,7 @@ import {
   loginAdmin,
   rejectArrestRequest,
   removeGuestFromQueue,
+  reuseArrestRequestImage,
   updateGuestInQueue,
 } from "../api/queueApi.js";
 import { updateEventScreenBanner } from "../api/eventScreenApi.js";
@@ -29,6 +30,30 @@ const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
 
 function formatCurrencyFromCents(valueInCents) {
   return CURRENCY_FORMATTER.format(valueInCents / 100);
+}
+
+function normalizeComparableName(name) {
+  return name
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function findReusableImageRequest(currentRequest, requests) {
+  if (currentRequest.targetImagePath) {
+    return null;
+  }
+
+  const currentName = normalizeComparableName(currentRequest.targetName);
+  return [...requests]
+    .reverse()
+    .find(
+      (request) =>
+        request.id !== currentRequest.id &&
+        request.targetImagePath &&
+        normalizeComparableName(request.targetName) === currentName
+    );
 }
 
 function EmptyState({ children }) {
@@ -125,7 +150,15 @@ function AdminLogin({ onLogin }) {
   );
 }
 
-function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBusy }) {
+function ArrestRequestCard({
+  request,
+  reusableImageRequest,
+  onConfirmPayment,
+  onReuseImage,
+  onAccept,
+  onReject,
+  isBusy,
+}) {
   const isPaymentConfirmed = request.paymentStatus === "confirmed";
 
   return (
@@ -163,6 +196,27 @@ function ArrestRequestCard({ request, onConfirmPayment, onAccept, onReject, isBu
           </div>
         </div>
       </div>
+
+      {reusableImageRequest ? (
+        <div className="mt-3 flex items-center gap-2 rounded-md bg-stone-50 p-2 ring-1 ring-stone-200">
+          <img
+            className="h-10 w-10 shrink-0 rounded object-cover"
+            src={reusableImageRequest.targetImagePath}
+            alt={`Foto anterior de ${request.targetName}`}
+          />
+          <p className="min-w-0 flex-1 text-xs font-semibold text-stone-600">
+            Foto anterior encontrada
+          </p>
+          <button
+            className="shrink-0 rounded-md bg-stone-900 px-2.5 py-2 text-xs font-bold text-white disabled:bg-stone-400"
+            type="button"
+            onClick={() => onReuseImage(request.id, reusableImageRequest.id)}
+            disabled={isBusy}
+          >
+            Usar
+          </button>
+        </div>
+      ) : null}
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         <AdminButton
@@ -519,6 +573,18 @@ export function AdminPage() {
     }
   }
 
+  async function handleReuseImage(requestId, sourceRequestId) {
+    setBusyRequestId(requestId);
+    try {
+      await reuseArrestRequestImage(requestId, { sourceRequestId });
+      setErrorMessage(null);
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setBusyRequestId(null);
+    }
+  }
+
   function handleLogout() {
     clearAdminToken();
     setAdminToken(null);
@@ -577,8 +643,10 @@ export function AdminPage() {
                   <ArrestRequestCard
                     key={request.id}
                     request={request}
+                    reusableImageRequest={findReusableImageRequest(request, arrestRequests)}
                     isBusy={busyRequestId === request.id}
                     onConfirmPayment={(id) => runRequestAction(id, confirmArrestRequestPayment)}
+                    onReuseImage={handleReuseImage}
                     onAccept={(id) => runRequestAction(id, acceptArrestRequest)}
                     onReject={(id) => runRequestAction(id, rejectArrestRequest)}
                   />

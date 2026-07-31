@@ -108,6 +108,15 @@ export async function confirmArrestRequestPayment(id) {
   return parseJsonOrThrow(response);
 }
 
+export async function reuseArrestRequestImage(id, { sourceRequestId }) {
+  const response = await fetch(`${API_BASE_PATH}/arrest-requests/${id}/reuse-image`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getAdminHeaders() },
+    body: JSON.stringify({ sourceRequestId }),
+  });
+  return parseJsonOrThrow(response);
+}
+
 export async function acceptArrestRequest(id) {
   const response = await fetch(`${API_BASE_PATH}/arrest-requests/${id}/accept`, {
     method: "POST",

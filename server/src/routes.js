@@ -28,6 +28,7 @@ export function createApiRouter(
   router.delete("/queue/:id", adminOnly, queueController.removeGuest);
   router.put("/event-screen/banner", adminOnly, eventSettingsController.updateScreenBanner);
   router.post("/arrest-requests/:id/confirm-payment", adminOnly, arrestRequestController.confirmPayment);
+  router.post("/arrest-requests/:id/reuse-image", adminOnly, arrestRequestController.reuseImage);
   router.post("/arrest-requests/:id/accept", adminOnly, arrestRequestController.acceptRequest);
   router.post("/arrest-requests/:id/reject", adminOnly, arrestRequestController.rejectRequest);
 

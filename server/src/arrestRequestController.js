@@ -30,6 +30,17 @@ export class ArrestRequestController {
     response.json(updatedRequest);
   };
 
+  reuseImage = (request, response) => {
+    const requestId = Number(request.params.id);
+    const sourceRequestId = Number(request.body.sourceRequestId);
+    const updatedRequest = this.arrestRequestService.reuseImageFromRequest(
+      requestId,
+      sourceRequestId
+    );
+    this.broadcastCurrentRequests();
+    response.json(updatedRequest);
+  };
+
   acceptRequest = (request, response) => {
     const requestId = Number(request.params.id);
     const result = this.arrestRequestService.acceptRequest(requestId);
