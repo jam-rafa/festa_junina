@@ -369,6 +369,13 @@ function PaidVoucherForm({ onError }) {
           >
             {isCopied ? "Link copiado" : "Copiar link para a pessoa"}
           </button>
+          <button
+            className="mt-2 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-xs font-bold text-stone-700"
+            type="button"
+            onClick={() => setVoucher(null)}
+          >
+            Fechar vale
+          </button>
         </div>
       ) : null}
       <AdminButton
