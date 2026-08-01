@@ -26,6 +26,10 @@ jobs:
             cd /var/www/html/festa-junina
             git fetch origin main
             git reset --hard origin/main
-            docker compose up -d --build
+            docker compose up -d --build --wait --wait-timeout 90
+            if ! docker compose exec -T server node -e "fetch('http://127.0.0.1:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"; then
+              docker compose ps
+              docker compose logs --tail=100 server client
+              exit 1
+            fi
             docker image prune -f
-            docker compose exec -T server node -e "fetch('http://localhost:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
