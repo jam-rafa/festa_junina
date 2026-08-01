@@ -89,6 +89,165 @@ button {
   }
 }
 
+@keyframes wanted-poster-in {
+  from {
+    opacity: 0;
+    transform: translateY(3%) rotate(-0.7deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+}
+
+.wanted-mural {
+  padding: clamp(12px, 1.8vw, 38px);
+  background:
+    linear-gradient(rgba(38, 16, 8, 0.24), rgba(38, 16, 8, 0.4)),
+    radial-gradient(ellipse at center, transparent 30%, rgba(27, 11, 6, 0.36));
+}
+
+.wanted-mural__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1.15vw, 24px);
+  width: 100%;
+  height: 100%;
+}
+
+.wanted-poster {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  overflow: hidden;
+  border: clamp(2px, 0.28vw, 6px) solid #32180e;
+  padding: clamp(5px, 0.65vw, 13px);
+  color: #30140c;
+  text-align: center;
+  text-transform: uppercase;
+  background-color: #e7bd7a;
+  background-image:
+    linear-gradient(105deg, rgba(255, 244, 200, 0.35), transparent 34%, rgba(76, 32, 14, 0.16) 100%),
+    repeating-linear-gradient(8deg, transparent 0 16px, rgba(84, 37, 17, 0.05) 17px 18px);
+  box-shadow: 0.4vw 0.55vw 0.4vw rgba(34, 13, 6, 0.35);
+  animation: wanted-poster-in 420ms ease-out both;
+}
+
+.wanted-poster::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  opacity: 0.42;
+  background:
+    linear-gradient(90deg, transparent 1%, rgba(73, 28, 13, 0.28) 1.5%, transparent 2.3%),
+    linear-gradient(0deg, transparent 6%, rgba(80, 29, 12, 0.2) 6.6%, transparent 7.2%, transparent 93%, rgba(80, 29, 12, 0.22) 94%, transparent 95%),
+    radial-gradient(ellipse at 4% 5%, rgba(62, 20, 8, 0.32) 0 0.7%, transparent 1.9%),
+    radial-gradient(ellipse at 94% 91%, rgba(62, 20, 8, 0.28) 0 0.8%, transparent 2%);
+  mix-blend-mode: multiply;
+}
+
+.wanted-poster__header,
+.wanted-poster__footer,
+.wanted-poster__photo-frame {
+  position: relative;
+  z-index: 1;
+}
+
+.wanted-poster__header {
+  padding: 0 0 clamp(3px, 0.3vw, 7px);
+}
+
+.wanted-poster__title {
+  margin: 0;
+  font-family: Rockwell, "Roboto Slab", "Courier New", serif;
+  font-size: clamp(15px, 2.2vw, 52px);
+  font-weight: 1000;
+  line-height: 0.8;
+  letter-spacing: -0.07em;
+  text-shadow: 1px 1px 0 rgba(255, 220, 150, 0.24);
+}
+
+.wanted-poster__subtitle,
+.wanted-poster__notice {
+  margin: clamp(3px, 0.36vw, 7px) 0 0;
+  font-family: "Courier New", monospace;
+  font-size: clamp(5px, 0.48vw, 12px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.16em;
+}
+
+.wanted-poster__photo-frame {
+  min-height: 0;
+  overflow: hidden;
+  border: clamp(2px, 0.22vw, 5px) solid #3a1a0d;
+  background: #795539;
+}
+
+.wanted-poster__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: sepia(0.78) grayscale(0.72) contrast(1.18) brightness(0.79);
+}
+
+.wanted-poster__photo-frame--empty {
+  display: grid;
+  place-items: center;
+  color: #e6be7e;
+  font-family: Rockwell, "Roboto Slab", serif;
+  font-size: clamp(28px, 6vw, 136px);
+  font-weight: 900;
+}
+
+.wanted-poster__footer {
+  padding: clamp(4px, 0.55vw, 11px) 0 0;
+}
+
+.wanted-poster__name {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: #30140c;
+  font-family: Rockwell, "Roboto Slab", "Courier New", serif;
+  font-size: clamp(11px, 1.1vw, 27px);
+  font-weight: 1000;
+  line-height: 0.92;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.wanted-poster__notice {
+  color: #712616;
+}
+
+.wanted-poster--announcement {
+  width: min(39vw, 760px);
+  height: min(86%, 820px);
+  padding: clamp(12px, 1.25vw, 26px);
+  box-shadow: 1vw 1.25vw 1.3vw rgba(12, 4, 1, 0.5);
+}
+
+.wanted-poster--announcement .wanted-poster__title {
+  font-size: clamp(34px, 5vw, 102px);
+}
+
+.wanted-poster--announcement .wanted-poster__subtitle,
+.wanted-poster--announcement .wanted-poster__notice {
+  font-size: clamp(10px, 0.95vw, 20px);
+}
+
+.wanted-poster--announcement .wanted-poster__name {
+  font-size: clamp(22px, 2.6vw, 55px);
+}
+
 @layer components {
   .festa-shell {
     @apply min-h-dvh max-w-none bg-[#fff4c8] text-[#361914];

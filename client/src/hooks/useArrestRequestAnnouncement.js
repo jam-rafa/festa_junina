@@ -3,9 +3,11 @@ import { io } from "socket.io-client";
 
 const ARREST_REQUEST_CREATED_EVENT = "event-screen:arrest-request-created";
 const ANNOUNCEMENT_DURATION_MS = 8000;
+const MURAL_REQUESTS_MAX = 8;
 
 export function useArrestRequestAnnouncement({ enabled = true } = {}) {
   const [announcement, setAnnouncement] = useState(null);
+  const [muralRequests, setMuralRequests] = useState([]);
 
   useEffect(() => {
     if (!enabled) {
@@ -15,6 +17,10 @@ export function useArrestRequestAnnouncement({ enabled = true } = {}) {
     const socket = io();
     socket.on(ARREST_REQUEST_CREATED_EVENT, (request) => {
       setAnnouncement(request);
+      setMuralRequests((currentRequests) => {
+        const existingRequests = currentRequests.filter((item) => item.id !== request.id);
+        return [request, ...existingRequests].slice(0, MURAL_REQUESTS_MAX);
+      });
     });
 
     return () => socket.disconnect();
@@ -29,5 +35,5 @@ export function useArrestRequestAnnouncement({ enabled = true } = {}) {
     return () => clearTimeout(timeoutId);
   }, [announcement]);
 
-  return announcement;
+  return { announcement, muralRequests };
 }
