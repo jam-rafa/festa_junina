@@ -7,6 +7,7 @@ export class ArrestRequestRepository {
 
   create({
     targetName,
+    requesterName = null,
     targetImagePath = null,
     status,
     priceCents,
@@ -18,11 +19,12 @@ export class ArrestRequestRepository {
     const result = this.database
       .prepare(
         `INSERT INTO arrest_requests
-          (targetName, targetImagePath, status, priceCents, durationMinutes, paymentStatus, createdAt, paidAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+          (targetName, requesterName, targetImagePath, status, priceCents, durationMinutes, paymentStatus, createdAt, paidAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         targetName,
+        requesterName,
         targetImagePath,
         status,
         priceCents,

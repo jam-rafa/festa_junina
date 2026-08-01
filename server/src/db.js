@@ -19,6 +19,7 @@ const CREATE_ARREST_REQUESTS_TABLE = `
   CREATE TABLE IF NOT EXISTS arrest_requests (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     targetName TEXT NOT NULL,
+    requesterName TEXT,
     targetImagePath TEXT,
     status TEXT NOT NULL,
     priceCents INTEGER NOT NULL,
@@ -45,7 +46,9 @@ const CREATE_PAYMENT_VOUCHERS_TABLE = `
     createdAt TEXT NOT NULL,
     expiresAt TEXT NOT NULL,
     usedAt TEXT,
-    arrestRequestId INTEGER
+    arrestRequestId INTEGER,
+    maxUses INTEGER NOT NULL DEFAULT 1,
+    redeemedCount INTEGER NOT NULL DEFAULT 0
   )
 `;
 
@@ -76,5 +79,13 @@ export function openDatabase(databasePath = process.env.DATABASE_PATH ?? default
   database.exec(CREATE_EVENT_SCREEN_BANNERS_TABLE);
   ensureColumn(database, "queue_entries", "targetImagePath", "TEXT");
   ensureColumn(database, "arrest_requests", "targetImagePath", "TEXT");
+  ensureColumn(database, "arrest_requests", "requesterName", "TEXT");
+  ensureColumn(database, "payment_vouchers", "maxUses", "INTEGER NOT NULL DEFAULT 1");
+  ensureColumn(database, "payment_vouchers", "redeemedCount", "INTEGER NOT NULL DEFAULT 0");
+  database
+    .prepare(
+      "UPDATE payment_vouchers SET redeemedCount = maxUses WHERE usedAt IS NOT NULL AND redeemedCount = 0"
+    )
+    .run();
   return database;
 }

@@ -3,13 +3,39 @@ import { ArrestRequestForm } from "../components/ArrestRequestForm.jsx";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+const REQUESTER_NAME_STORAGE_KEY = "festa-junina:arrest-requester-name";
+const VOUCHER_CODE_STORAGE_KEY = "festa-junina:arrest-voucher-code";
+
+function getSavedRequesterName() {
+  try {
+    return window.localStorage.getItem(REQUESTER_NAME_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getSavedVoucherCode() {
+  try {
+    return window.localStorage.getItem(VOUCHER_CODE_STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export function ArrestRequestPage() {
   const [searchParams] = useSearchParams();
-  const [voucherCode, setVoucherCode] = useState(() => searchParams.get("vale") ?? "");
+  const [voucherCode, setVoucherCode] = useState(
+    () => searchParams.get("vale") ?? getSavedVoucherCode()
+  );
   const [isVoucherValid, setIsVoucherValid] = useState(false);
+  const [remainingUses, setRemainingUses] = useState(0);
   const [isCheckingVoucher, setIsCheckingVoucher] = useState(false);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [requesterName, setRequesterName] = useState(getSavedRequesterName);
+  const [hasSavedRequesterName, setHasSavedRequesterName] = useState(() =>
+    Boolean(getSavedRequesterName().trim())
+  );
 
   async function checkVoucher(code = voucherCode) {
     const normalizedCode = code.trim().toUpperCase();
@@ -20,9 +46,17 @@ export function ArrestRequestPage() {
 
     setIsCheckingVoucher(true);
     try {
-      const { isValid } = await validatePaymentVoucher(normalizedCode);
+      const { isValid, remainingUses: nextRemainingUses } = await validatePaymentVoucher(normalizedCode);
       setIsVoucherValid(isValid);
-      setErrorMessage(isValid ? null : "Este vale é inválido, já foi usado ou expirou.");
+      setRemainingUses(nextRemainingUses ?? 0);
+      if (isValid) {
+        try {
+          window.localStorage.setItem(VOUCHER_CODE_STORAGE_KEY, normalizedCode);
+        } catch {
+          // O vale continua utilizável mesmo sem armazenamento local.
+        }
+      }
+      setErrorMessage(isValid ? null : "Este vale é inválido ou já atingiu o limite de registros.");
     } catch (error) {
       setIsVoucherValid(false);
       setErrorMessage(error.message);
@@ -42,6 +76,14 @@ export function ArrestRequestPage() {
   async function handleSubmit(formValues) {
     try {
       const request = await createArrestRequest({ ...formValues, voucherCode });
+      const normalizedRequesterName = formValues.requesterName.trim();
+      try {
+        window.localStorage.setItem(REQUESTER_NAME_STORAGE_KEY, normalizedRequesterName);
+      } catch {
+        // O pedido continua válido mesmo quando o navegador não permite armazenamento local.
+      }
+      setHasSavedRequesterName(true);
+      setRemainingUses(request.remainingUses ?? 0);
       setErrorMessage(null);
       return request;
     } catch (error) {
@@ -109,7 +151,13 @@ export function ArrestRequestPage() {
                 submitLabel="Enviar pedido pago"
                 submittingLabel="Enviando pedido..."
                 onSuccess={setCreatedRequest}
+                requesterName={requesterName}
+                onRequesterNameChange={setRequesterName}
+                requiresRequesterName={!hasSavedRequesterName}
               />
+              <p className="mt-3 text-center text-sm font-semibold text-stone-700">
+                Este vale ainda permite {remainingUses} {remainingUses === 1 ? "registro" : "registros"}.
+              </p>
             </>
           ) : null}
 
@@ -122,7 +170,8 @@ export function ArrestRequestPage() {
           {createdRequest && (
             <div className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
               Pedido pago enviado para a cadeia organizar a prisão de{" "}
-              <strong>{createdRequest.targetName}</strong>.
+              <strong>{createdRequest.targetName}</strong>. Este vale ainda permite {remainingUses}{" "}
+              {remainingUses === 1 ? "registro" : "registros"}.
             </div>
           )}
         </div>

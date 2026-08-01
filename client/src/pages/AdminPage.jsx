@@ -183,6 +183,11 @@ function ArrestRequestCard({
               <p className="mt-0.5 text-xs font-semibold text-stone-600">
                 {formatCurrencyFromCents(request.priceCents)} · {request.durationMinutes} min
               </p>
+              {request.requesterName ? (
+                <p className="mt-1 text-xs text-stone-600">
+                  Solicitado por <strong>{request.requesterName}</strong>
+                </p>
+              ) : null}
             </div>
             <span
               className={
@@ -317,13 +322,14 @@ function ManualArrestRequestForm({ onError }) {
 
 function PaidVoucherForm({ onError }) {
   const [voucher, setVoucher] = useState(null);
+  const [maxUses, setMaxUses] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
   async function generateVoucher() {
     setIsGenerating(true);
     try {
-      setVoucher(await createPaymentVoucher());
+      setVoucher(await createPaymentVoucher(maxUses));
       setIsCopied(false);
       onError(null);
     } catch (error) {
@@ -353,12 +359,42 @@ function PaidVoucherForm({ onError }) {
       <p className="mt-1 text-xs leading-5 text-stone-600">
         Receba o dinheiro e gere um vale. A pessoa só poderá cadastrar foto e nome com esse código.
       </p>
+      <label className="mt-3 block">
+        <span className="text-xs font-bold text-stone-700">Quantidade de registros permitidos</span>
+        <span className="mt-2 grid grid-cols-5 gap-2">
+          {[1, 2, 3, 4, 5].map((quantity) => (
+            <button
+              key={quantity}
+              className={`rounded-md border px-2 py-2 text-sm font-black transition ${
+                Number(maxUses) === quantity
+                  ? "border-red-700 bg-red-700 text-white"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-red-400"
+              }`}
+              type="button"
+              aria-pressed={Number(maxUses) === quantity}
+              onClick={() => setMaxUses(quantity)}
+            >
+              {quantity}
+            </button>
+          ))}
+        </span>
+        <input
+          className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+          type="number"
+          min="1"
+          max="100"
+          step="1"
+          value={maxUses}
+          onChange={(event) => setMaxUses(event.target.value)}
+          required
+        />
+      </label>
       {voucher ? (
         <div className="mt-3 rounded-md bg-green-50 p-3 text-center ring-1 ring-green-200">
           <p className="text-xs font-bold uppercase tracking-wide text-green-800">Vale pago</p>
           <p className="mt-1 font-mono text-3xl font-black tracking-[0.18em] text-stone-950">{voucher.code}</p>
           <p className="mt-2 text-xs font-medium text-green-900">
-            Válido até {new Date(voucher.expiresAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · uso único
+            Sem prazo de expiração · {voucher.maxUses} {voucher.maxUses === 1 ? "registro" : "registros"}
           </p>
           <VoucherQrCode accessLink={`${window.location.origin}/pedir-prisao?vale=${voucher.code}`} />
           <p className="mt-2 text-xs font-medium text-green-900">Ou peça para a pessoa apontar a câmera para o QR Code.</p>

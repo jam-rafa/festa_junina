@@ -1,7 +1,7 @@
 const QUEUE_UPDATED_EVENT = "queue:updated";
 const ARREST_REQUESTS_UPDATED_EVENT = "arrest-requests:updated";
 const EVENT_SCREEN_BANNER_UPDATED_EVENT = "event-screen:banner-updated";
-const EVENT_SCREEN_ARREST_REQUEST_CREATED_EVENT = "event-screen:arrest-request-created";
+const EVENT_SCREEN_ARREST_REQUEST_ACCEPTED_EVENT = "event-screen:arrest-request-accepted";
 const ADMIN_ROOM = "admin";
 
 export class RealtimeGateway {
@@ -23,8 +23,8 @@ export class RealtimeGateway {
     this.socketIoServer.emit(EVENT_SCREEN_BANNER_UPDATED_EVENT, screenBanner);
   }
 
-  broadcastEventScreenArrestRequestCreated(arrestRequest) {
-    this.socketIoServer.emit(EVENT_SCREEN_ARREST_REQUEST_CREATED_EVENT, arrestRequest);
+  broadcastEventScreenArrestRequestAccepted(arrestRequest) {
+    this.socketIoServer.emit(EVENT_SCREEN_ARREST_REQUEST_ACCEPTED_EVENT, arrestRequest);
   }
 
   registerAdminSockets() {

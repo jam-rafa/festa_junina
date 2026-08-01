@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-const ARREST_REQUEST_CREATED_EVENT = "event-screen:arrest-request-created";
+const ARREST_REQUEST_ACCEPTED_EVENT = "event-screen:arrest-request-accepted";
 const ANNOUNCEMENT_DURATION_MS = 8000;
 const MURAL_REQUESTS_MAX = 8;
 
@@ -15,7 +15,7 @@ export function useArrestRequestAnnouncement({ enabled = true } = {}) {
     }
 
     const socket = io();
-    socket.on(ARREST_REQUEST_CREATED_EVENT, (request) => {
+    socket.on(ARREST_REQUEST_ACCEPTED_EVENT, (request) => {
       setAnnouncement(request);
       setMuralRequests((currentRequests) => {
         const existingRequests = currentRequests.filter((item) => item.id !== request.id);

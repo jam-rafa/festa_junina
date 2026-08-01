@@ -86,9 +86,10 @@ export async function fetchArrestRequests() {
   return parseJsonOrThrow(response);
 }
 
-export async function createArrestRequest({ targetName, targetImage, voucherCode }) {
+export async function createArrestRequest({ targetName, targetImage, voucherCode, requesterName }) {
   const formData = new FormData();
   formData.append("targetName", targetName);
+  formData.append("requesterName", requesterName);
   formData.append("voucherCode", voucherCode);
   if (targetImage) {
     formData.append("targetImage", targetImage);
@@ -125,10 +126,11 @@ export async function validatePaymentVoucher(code) {
   return parseJsonOrThrow(response);
 }
 
-export async function createPaymentVoucher() {
+export async function createPaymentVoucher(maxUses = 1) {
   const response = await fetch(`${API_BASE_PATH}/payment-vouchers`, {
     method: "POST",
-    headers: getAdminHeaders(),
+    headers: { ...getAdminHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ maxUses }),
   });
   return parseJsonOrThrow(response);
 }

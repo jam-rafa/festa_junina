@@ -15,7 +15,6 @@ export class ArrestRequestController {
     try {
       const createdRequest = this.arrestRequestService.createPaidRequest(request.body);
       this.broadcastCurrentRequests();
-      this.realtimeGateway.broadcastEventScreenArrestRequestCreated(createdRequest);
       response.status(201).json(createdRequest);
     } catch (error) {
       removeUploadedFile(request.file?.path);
@@ -27,7 +26,6 @@ export class ArrestRequestController {
     try {
       const createdRequest = this.arrestRequestService.createAdminPaidRequest(request.body);
       this.broadcastCurrentRequests();
-      this.realtimeGateway.broadcastEventScreenArrestRequestCreated(createdRequest);
       response.status(201).json(createdRequest);
     } catch (error) {
       removeUploadedFile(request.file?.path);
@@ -58,6 +56,7 @@ export class ArrestRequestController {
     const result = this.arrestRequestService.acceptRequest(requestId);
     this.broadcastCurrentRequests();
     this.broadcastCurrentQueue();
+    this.realtimeGateway.broadcastEventScreenArrestRequestAccepted(result.request);
     response.json(result);
   };
 

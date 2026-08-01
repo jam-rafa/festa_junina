@@ -20,6 +20,12 @@ function assertValidTargetName(targetName) {
   }
 }
 
+function assertValidRequesterName(requesterName) {
+  if (typeof requesterName !== "string" || requesterName.trim().length === 0) {
+    throw new ValidationError("Nome de quem está solicitando é obrigatório");
+  }
+}
+
 function normalizeTargetImagePath(targetImagePath) {
   if (typeof targetImagePath !== "string" || targetImagePath.trim().length === 0) {
     return null;
@@ -62,8 +68,9 @@ export class ArrestRequestService {
     });
   }
 
-  createPaidRequest({ targetName, targetImagePath, voucherCode }) {
+  createPaidRequest({ targetName, requesterName, targetImagePath, voucherCode }) {
     assertValidTargetName(targetName);
+    assertValidRequesterName(requesterName);
     if (!this.paymentVoucherService) {
       throw new ValidationError("Os vales de pagamento não estão disponíveis");
     }
@@ -71,6 +78,7 @@ export class ArrestRequestService {
     return this.paymentVoucherService.redeemVoucher(voucherCode ?? "", () =>
       this.arrestRequestRepository.create({
         targetName: targetName.trim(),
+        requesterName: requesterName.trim(),
         targetImagePath: normalizeTargetImagePath(targetImagePath),
         status: REQUEST_STATUS.PENDING,
         priceCents: ARREST_REQUEST_PRICE_CENTS,

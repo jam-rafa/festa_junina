@@ -23,7 +23,7 @@ function createServices() {
     queueService,
     paymentVoucherService
   );
-  return { arrestRequestService, paymentVoucherService, queueService };
+  return { database, arrestRequestService, paymentVoucherService, queueService };
 }
 
 test("cria um pedido de prisão válido com pagamento pendente", () => {
@@ -147,24 +147,58 @@ test("cria pedido pago ao usar um vale de pagamento", () => {
 
   const request = arrestRequestService.createPaidRequest({
     targetName: "Lia",
+    requesterName: "Rafa",
     voucherCode: voucher.code,
   });
 
   assert.equal(request.targetName, "Lia");
+  assert.equal(request.requesterName, "Rafa");
   assert.equal(request.paymentStatus, "confirmed");
   assert.ok(request.paidAt);
   assert.equal(paymentVoucherService.validateVoucher(voucher.code), false);
 });
 
+test("exige o nome de quem solicita o pedido pago", () => {
+  const { arrestRequestService, paymentVoucherService } = createServices();
+  const voucher = paymentVoucherService.createPaidVoucher();
+
+  assert.throws(
+    () => arrestRequestService.createPaidRequest({ targetName: "Lia", voucherCode: voucher.code }),
+    ValidationError
+  );
+});
+
 test("impede usar o mesmo vale mais de uma vez", () => {
   const { arrestRequestService, paymentVoucherService } = createServices();
   const voucher = paymentVoucherService.createPaidVoucher();
-  arrestRequestService.createPaidRequest({ targetName: "Lia", voucherCode: voucher.code });
+  arrestRequestService.createPaidRequest({ targetName: "Lia", requesterName: "Rafa", voucherCode: voucher.code });
 
   assert.throws(
-    () => arrestRequestService.createPaidRequest({ targetName: "Caio", voucherCode: voucher.code }),
+    () => arrestRequestService.createPaidRequest({ targetName: "Caio", requesterName: "Rafa", voucherCode: voucher.code }),
     ValidationError
   );
+});
+
+test("permite usar um vale em vários pedidos até atingir a quantidade definida", () => {
+  const { arrestRequestService, paymentVoucherService } = createServices();
+  const voucher = paymentVoucherService.createPaidVoucher(2);
+
+  arrestRequestService.createPaidRequest({ targetName: "Lia", requesterName: "Rafa", voucherCode: voucher.code });
+  arrestRequestService.createPaidRequest({ targetName: "Caio", requesterName: "Rafa", voucherCode: voucher.code });
+
+  assert.equal(paymentVoucherService.validateVoucher(voucher.code), false);
+  assert.throws(
+    () => arrestRequestService.createPaidRequest({ targetName: "Bia", requesterName: "Rafa", voucherCode: voucher.code }),
+    ValidationError
+  );
+});
+
+test("vale continua válido mesmo com data de expiração antiga", () => {
+  const { database, paymentVoucherService } = createServices();
+  const voucher = paymentVoucherService.createPaidVoucher();
+  database.prepare("UPDATE payment_vouchers SET expiresAt = ? WHERE id = ?").run("2000-01-01T00:00:00.000Z", voucher.id);
+
+  assert.equal(paymentVoucherService.validateVoucher(voucher.code), true);
 });
 
 test("adm pode cadastrar um pedido pago sem vale", () => {

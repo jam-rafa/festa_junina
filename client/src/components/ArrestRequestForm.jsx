@@ -9,6 +9,9 @@ export function ArrestRequestForm({
   submitLabel = "Enviar pedido",
   submittingLabel = "Enviando...",
   onSuccess,
+  requesterName = "",
+  onRequesterNameChange,
+  requiresRequesterName = false,
 }) {
   const [targetName, setTargetName] = useState("");
   const [targetImage, setTargetImage] = useState(null);
@@ -56,10 +59,15 @@ export function ArrestRequestForm({
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!targetImage && !window.confirm("Deseja prosseguir sem adicionar uma foto?")) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const createdRequest = await onSubmit({ targetName, targetImage });
+      const createdRequest = await onSubmit({ targetName, targetImage, requesterName });
       setTargetName("");
       setTargetImage(null);
       setValidationMessage(null);
@@ -72,6 +80,21 @@ export function ArrestRequestForm({
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      {requiresRequesterName ? (
+        <label className="block">
+          <span className="text-sm font-semibold text-stone-800">Seu nome</span>
+          <input
+            className="mt-2 w-full rounded-md border border-stone-300 px-4 py-3 text-base outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+            type="text"
+            value={requesterName}
+            onChange={(event) => onRequesterNameChange?.(event.target.value)}
+            placeholder="Ex: Maria Silva"
+            autoComplete="name"
+            required
+          />
+        </label>
+      ) : null}
+
       <label className="block">
         <span className="text-sm font-semibold text-stone-800">Nome do procurado</span>
         <input
