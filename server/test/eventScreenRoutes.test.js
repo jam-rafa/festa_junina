@@ -21,6 +21,7 @@ function createRouter() {
       {
         listRequests: noop,
         createRequest: noop,
+        createAdminRequest: noop,
         confirmPayment: noop,
         reuseImageFromRequest: noop,
         acceptRequest: noop,
@@ -40,7 +41,11 @@ function createRouter() {
       },
       { broadcastEventScreenBannerUpdated: noop }
     ),
-    authService
+    authService,
+    {
+      createPaidVoucher: noop,
+      validateVoucher: noop,
+    }
   );
 }
 

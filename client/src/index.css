@@ -36,6 +36,26 @@ main {
   font-weight: bold;
 }
 
+.guest-row--ready td {
+  background: var(--ready-bg);
+}
+
+.guest-row--ready td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.guest-row--ready td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+.release-ready-label {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 6px 10px;
+  color: #14532d;
+  background: #bbf7d0;
+}
+
 .new-guest-form {
   display: flex;
   gap: 8px;

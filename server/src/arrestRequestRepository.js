@@ -13,12 +13,13 @@ export class ArrestRequestRepository {
     durationMinutes,
     paymentStatus,
     createdAt,
+    paidAt = null,
   }) {
     const result = this.database
       .prepare(
         `INSERT INTO arrest_requests
-          (targetName, targetImagePath, status, priceCents, durationMinutes, paymentStatus, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+          (targetName, targetImagePath, status, priceCents, durationMinutes, paymentStatus, createdAt, paidAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         targetName,
@@ -27,7 +28,8 @@ export class ArrestRequestRepository {
         priceCents,
         durationMinutes,
         paymentStatus,
-        createdAt
+        createdAt,
+        paidAt
       );
     return this.findById(result.lastInsertRowid);
   }

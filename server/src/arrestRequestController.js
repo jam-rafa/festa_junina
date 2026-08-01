@@ -13,7 +13,19 @@ export class ArrestRequestController {
 
   createRequest = (request, response) => {
     try {
-      const createdRequest = this.arrestRequestService.createRequest(request.body);
+      const createdRequest = this.arrestRequestService.createPaidRequest(request.body);
+      this.broadcastCurrentRequests();
+      this.realtimeGateway.broadcastEventScreenArrestRequestCreated(createdRequest);
+      response.status(201).json(createdRequest);
+    } catch (error) {
+      removeUploadedFile(request.file?.path);
+      throw error;
+    }
+  };
+
+  createAdminRequest = (request, response) => {
+    try {
+      const createdRequest = this.arrestRequestService.createAdminPaidRequest(request.body);
       this.broadcastCurrentRequests();
       this.realtimeGateway.broadcastEventScreenArrestRequestCreated(createdRequest);
       response.status(201).json(createdRequest);

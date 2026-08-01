@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { useRealtimeQueue } from "../hooks/useRealtimeQueue.js";
 import { useRealtimeArrestRequests } from "../hooks/useRealtimeArrestRequests.js";
 import {
   acceptArrestRequest,
   addGuestToQueue,
   clearAdminToken,
-  confirmArrestRequestPayment,
-  createArrestRequest,
+  createAdminArrestRequest,
+  createPaymentVoucher,
   getAdminToken,
   loginAdmin,
   rejectArrestRequest,
@@ -21,7 +22,7 @@ import {
   findEventScreenBannerById,
 } from "../eventScreenBanners.js";
 import { useEventScreenBanner } from "../hooks/useEventScreenBanner.js";
-import { calculateRemainingMinutes } from "../remainingTime.js";
+import { calculateRemainingMinutes, hasGuestFinishedWaiting } from "../remainingTime.js";
 
 const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -75,7 +76,7 @@ function SectionTitle({ title, count }) {
   );
 }
 
-function AdminButton({ children, variant = "secondary", ...props }) {
+function AdminButton({ children, variant = "secondary", className = "", ...props }) {
   const variants = {
     primary: "bg-red-700 text-white hover:bg-red-800 disabled:bg-stone-400",
     secondary: "bg-stone-900 text-white hover:bg-stone-800 disabled:bg-stone-400",
@@ -85,7 +86,7 @@ function AdminButton({ children, variant = "secondary", ...props }) {
 
   return (
     <button
-      className={`w-full rounded-md px-2.5 py-2 text-xs font-bold transition disabled:cursor-not-allowed ${variants[variant]}`}
+      className={`w-full rounded-md px-2.5 py-2 text-xs font-bold transition disabled:cursor-not-allowed ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
@@ -153,7 +154,6 @@ function AdminLogin({ onLogin }) {
 function ArrestRequestCard({
   request,
   reusableImageRequest,
-  onConfirmPayment,
   onReuseImage,
   onAccept,
   onReject,
@@ -218,15 +218,7 @@ function ArrestRequestCard({
         </div>
       ) : null}
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <AdminButton
-          type="button"
-          variant="success"
-          onClick={() => onConfirmPayment(request.id)}
-          disabled={isBusy || isPaymentConfirmed}
-        >
-          Pagar
-        </AdminButton>
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <AdminButton
           type="button"
           variant="primary"
@@ -248,12 +240,44 @@ function ArrestRequestCard({
   );
 }
 
-function NewArrestRequestForm({ onError }) {
+function VoucherQrCode({ accessLink }) {
+  const [imageUrl, setImageUrl] = useState(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+    QRCode.toDataURL(accessLink, {
+      width: 240,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: { dark: "#1c1917", light: "#ffffff" },
+    })
+      .then((nextImageUrl) => {
+        if (isCurrent) {
+          setImageUrl(nextImageUrl);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setImageUrl(null);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [accessLink]);
+
+  return imageUrl ? (
+    <img className="mx-auto mt-3 w-40 rounded-md bg-white p-2" src={imageUrl} alt="QR Code do vale pago" />
+  ) : null;
+}
+
+function ManualArrestRequestForm({ onError }) {
   const [isOpen, setIsOpen] = useState(false);
 
   async function handleSubmit(formValues) {
     try {
-      const createdRequest = await createArrestRequest(formValues);
+      const createdRequest = await createAdminArrestRequest(formValues);
       onError(null);
       return createdRequest;
     } catch (error) {
@@ -269,19 +293,93 @@ function NewArrestRequestForm({ onError }) {
         type="button"
         onClick={() => setIsOpen((current) => !current)}
       >
-        <span>Novo pedido</span>
+        <span>Cadastrar pedido manual</span>
         <span className="rounded-full bg-stone-900 px-2 py-1 text-xs font-bold text-white">
           {isOpen ? "Fechar" : "Abrir"}
         </span>
       </button>
       {isOpen ? (
-        <ArrestRequestForm
-          onSubmit={handleSubmit}
-          submitLabel="Criar pedido"
-          submittingLabel="Criando..."
-          onSuccess={() => setIsOpen(false)}
-        />
+        <>
+          <p className="mt-2 text-xs leading-5 text-stone-600">
+            Para pedidos feitos diretamente pelo atendente. Eles já entram como pagos.
+          </p>
+          <ArrestRequestForm
+            onSubmit={handleSubmit}
+            submitLabel="Cadastrar pedido pago"
+            submittingLabel="Cadastrando..."
+            onSuccess={() => setIsOpen(false)}
+          />
+        </>
       ) : null}
+    </div>
+  );
+}
+
+function PaidVoucherForm({ onError }) {
+  const [voucher, setVoucher] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+
+  async function generateVoucher() {
+    setIsGenerating(true);
+    try {
+      setVoucher(await createPaymentVoucher());
+      setIsCopied(false);
+      onError(null);
+    } catch (error) {
+      onError(error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  async function copyAccessLink() {
+    if (!voucher) {
+      return;
+    }
+
+    const accessLink = `${window.location.origin}/pedir-prisao?vale=${voucher.code}`;
+    try {
+      await navigator.clipboard.writeText(accessLink);
+      setIsCopied(true);
+    } catch {
+      onError("Não foi possível copiar o link. Entregue o código mostrado.");
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+      <p className="text-sm font-black text-stone-950">Pagamento recebido</p>
+      <p className="mt-1 text-xs leading-5 text-stone-600">
+        Receba o dinheiro e gere um vale. A pessoa só poderá cadastrar foto e nome com esse código.
+      </p>
+      {voucher ? (
+        <div className="mt-3 rounded-md bg-green-50 p-3 text-center ring-1 ring-green-200">
+          <p className="text-xs font-bold uppercase tracking-wide text-green-800">Vale pago</p>
+          <p className="mt-1 font-mono text-3xl font-black tracking-[0.18em] text-stone-950">{voucher.code}</p>
+          <p className="mt-2 text-xs font-medium text-green-900">
+            Válido até {new Date(voucher.expiresAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })} · uso único
+          </p>
+          <VoucherQrCode accessLink={`${window.location.origin}/pedir-prisao?vale=${voucher.code}`} />
+          <p className="mt-2 text-xs font-medium text-green-900">Ou peça para a pessoa apontar a câmera para o QR Code.</p>
+          <button
+            className="mt-3 w-full rounded-md bg-stone-900 px-3 py-2 text-xs font-bold text-white"
+            type="button"
+            onClick={copyAccessLink}
+          >
+            {isCopied ? "Link copiado" : "Copiar link para a pessoa"}
+          </button>
+        </div>
+      ) : null}
+      <AdminButton
+        className="mt-3"
+        type="button"
+        variant="success"
+        onClick={generateVoucher}
+        disabled={isGenerating}
+      >
+        {isGenerating ? "Gerando vale..." : "Gerar vale pago"}
+      </AdminButton>
     </div>
   );
 }
@@ -431,11 +529,13 @@ function EventScreenBannerForm({ onError }) {
   );
 }
 
-function GuestListItem({ guest, onError }) {
+function GuestListItem({ guest, now, onError }) {
   const [isEditing, setIsEditing] = useState(false);
   const [guestName, setGuestName] = useState(guest.guestName);
   const [holdDurationMinutes, setHoldDurationMinutes] = useState(guest.holdDurationMinutes);
   const [isSaving, setIsSaving] = useState(false);
+  const remainingMinutes = calculateRemainingMinutes(guest, now);
+  const isReady = hasGuestFinishedWaiting(guest, now);
 
   async function handleSave() {
     setIsSaving(true);
@@ -489,7 +589,13 @@ function GuestListItem({ guest, onError }) {
   }
 
   return (
-    <li className="rounded-lg border border-stone-200 bg-white p-3 shadow-sm">
+    <li
+      className={
+        isReady
+          ? "rounded-lg border-2 border-green-600 bg-green-50 p-3 shadow-sm"
+          : "rounded-lg border border-stone-200 bg-white p-3 shadow-sm"
+      }
+    >
       <div className="flex gap-3">
         {guest.targetImagePath ? (
           <img
@@ -500,8 +606,14 @@ function GuestListItem({ guest, onError }) {
         ) : null}
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-black text-stone-950">{guest.guestName}</h3>
-          <p className="mt-0.5 text-xs font-semibold text-stone-600">
-            {calculateRemainingMinutes(guest, new Date())} min restantes
+          <p
+            className={
+              isReady
+                ? "mt-0.5 text-sm font-black text-green-800"
+                : "mt-0.5 text-xs font-semibold text-stone-600"
+            }
+          >
+            {isReady ? "Pode soltar agora" : `${remainingMinutes} min restantes`}
           </p>
         </div>
       </div>
@@ -509,8 +621,8 @@ function GuestListItem({ guest, onError }) {
         <AdminButton type="button" variant="secondary" onClick={() => setIsEditing(true)}>
           Editar
         </AdminButton>
-        <AdminButton type="button" variant="danger" onClick={handleRemove}>
-          Remover
+        <AdminButton type="button" variant={isReady ? "success" : "danger"} onClick={handleRemove}>
+          {isReady ? "Soltar" : "Soltar agora"}
         </AdminButton>
       </div>
     </li>
@@ -558,8 +670,15 @@ export function AdminPage() {
   const [errorMessage, setErrorMessage] = useState(null);
   const [busyRequestId, setBusyRequestId] = useState(null);
   const [activeSection, setActiveSection] = useState("requests");
+  const [now, setNow] = useState(() => new Date());
 
   const pendingRequests = arrestRequests.filter((request) => request.status === "pending");
+  const readyGuestsCount = guests.filter((guest) => hasGuestFinishedWaiting(guest, now)).length;
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   async function runRequestAction(requestId, action) {
     setBusyRequestId(requestId);
@@ -635,7 +754,8 @@ export function AdminPage() {
               count={pendingRequests.length}
             />
             <div className="space-y-2">
-              <NewArrestRequestForm onError={setErrorMessage} />
+              <PaidVoucherForm onError={setErrorMessage} />
+              <ManualArrestRequestForm onError={setErrorMessage} />
               {pendingRequests.length === 0 ? (
                 <EmptyState>Nenhum pedido de prisão pendente.</EmptyState>
               ) : (
@@ -645,7 +765,6 @@ export function AdminPage() {
                     request={request}
                     reusableImageRequest={findReusableImageRequest(request, arrestRequests)}
                     isBusy={busyRequestId === request.id}
-                    onConfirmPayment={(id) => runRequestAction(id, confirmArrestRequestPayment)}
                     onReuseImage={handleReuseImage}
                     onAccept={(id) => runRequestAction(id, acceptArrestRequest)}
                     onReject={(id) => runRequestAction(id, rejectArrestRequest)}
@@ -664,12 +783,19 @@ export function AdminPage() {
             />
             <div className="space-y-2">
               <NewGuestForm onError={setErrorMessage} />
+              {readyGuestsCount > 0 ? (
+                <p className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-black text-green-800">
+                  {readyGuestsCount === 1
+                    ? "1 pessoa pode ser solta agora."
+                    : `${readyGuestsCount} pessoas podem ser soltas agora.`}
+                </p>
+              ) : null}
               {guests.length === 0 ? (
                 <EmptyState>Ninguém está preso agora.</EmptyState>
               ) : (
                 <ul className="space-y-2">
                   {guests.map((guest) => (
-                    <GuestListItem key={guest.id} guest={guest} onError={setErrorMessage} />
+                    <GuestListItem key={guest.id} guest={guest} now={now} onError={setErrorMessage} />
                   ))}
                 </ul>
               )}

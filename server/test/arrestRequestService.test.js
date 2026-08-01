@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import { openDatabase } from "../src/db.js";
 import { ArrestRequestRepository } from "../src/arrestRequestRepository.js";
+import { PaymentVoucherRepository } from "../src/paymentVoucherRepository.js";
+import { PaymentVoucherService } from "../src/paymentVoucherService.js";
 import {
   ARREST_REQUEST_DURATION_MINUTES,
   ARREST_REQUEST_PRICE_CENTS,
@@ -15,11 +17,13 @@ import { ValidationError } from "../src/errors.js";
 function createServices() {
   const database = openDatabase(":memory:");
   const queueService = new QueueService(new QueueRepository(database));
+  const paymentVoucherService = new PaymentVoucherService(new PaymentVoucherRepository(database));
   const arrestRequestService = new ArrestRequestService(
     new ArrestRequestRepository(database),
-    queueService
+    queueService,
+    paymentVoucherService
   );
-  return { arrestRequestService, queueService };
+  return { arrestRequestService, paymentVoucherService, queueService };
 }
 
 test("cria um pedido de prisão válido com pagamento pendente", () => {
@@ -135,4 +139,39 @@ test("impede alterar pedido já aceito", () => {
   arrestRequestService.acceptRequest(request.id);
 
   assert.throws(() => arrestRequestService.rejectRequest(request.id), ValidationError);
+});
+
+test("cria pedido pago ao usar um vale de pagamento", () => {
+  const { arrestRequestService, paymentVoucherService } = createServices();
+  const voucher = paymentVoucherService.createPaidVoucher();
+
+  const request = arrestRequestService.createPaidRequest({
+    targetName: "Lia",
+    voucherCode: voucher.code,
+  });
+
+  assert.equal(request.targetName, "Lia");
+  assert.equal(request.paymentStatus, "confirmed");
+  assert.ok(request.paidAt);
+  assert.equal(paymentVoucherService.validateVoucher(voucher.code), false);
+});
+
+test("impede usar o mesmo vale mais de uma vez", () => {
+  const { arrestRequestService, paymentVoucherService } = createServices();
+  const voucher = paymentVoucherService.createPaidVoucher();
+  arrestRequestService.createPaidRequest({ targetName: "Lia", voucherCode: voucher.code });
+
+  assert.throws(
+    () => arrestRequestService.createPaidRequest({ targetName: "Caio", voucherCode: voucher.code }),
+    ValidationError
+  );
+});
+
+test("adm pode cadastrar um pedido pago sem vale", () => {
+  const { arrestRequestService } = createServices();
+
+  const request = arrestRequestService.createAdminPaidRequest({ targetName: "No balcão" });
+
+  assert.equal(request.paymentStatus, "confirmed");
+  assert.ok(request.paidAt);
 });

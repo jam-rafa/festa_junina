@@ -1,26 +1,51 @@
-import { createArrestRequest } from "../api/queueApi.js";
+import { createArrestRequest, validatePaymentVoucher } from "../api/queueApi.js";
 import { ArrestRequestForm } from "../components/ArrestRequestForm.jsx";
-import { useState } from "react";
-
-const CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-function formatCurrencyFromCents(valueInCents) {
-  return CURRENCY_FORMATTER.format(valueInCents / 100);
-}
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export function ArrestRequestPage() {
+  const [searchParams] = useSearchParams();
+  const [voucherCode, setVoucherCode] = useState(() => searchParams.get("vale") ?? "");
+  const [isVoucherValid, setIsVoucherValid] = useState(false);
+  const [isCheckingVoucher, setIsCheckingVoucher] = useState(false);
   const [createdRequest, setCreatedRequest] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
+  async function checkVoucher(code = voucherCode) {
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode) {
+      setErrorMessage("Digite o código recebido na cadeia.");
+      return;
+    }
+
+    setIsCheckingVoucher(true);
+    try {
+      const { isValid } = await validatePaymentVoucher(normalizedCode);
+      setIsVoucherValid(isValid);
+      setErrorMessage(isValid ? null : "Este vale é inválido, já foi usado ou expirou.");
+    } catch (error) {
+      setIsVoucherValid(false);
+      setErrorMessage(error.message);
+    } finally {
+      setIsCheckingVoucher(false);
+    }
+  }
+
+  useEffect(() => {
+    if (voucherCode) {
+      checkVoucher(voucherCode);
+    }
+    // O link entregue pelo caixa já traz o vale preenchido.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleSubmit(formValues) {
     try {
-      const request = await createArrestRequest(formValues);
+      const request = await createArrestRequest({ ...formValues, voucherCode });
       setErrorMessage(null);
       return request;
     } catch (error) {
+      setIsVoucherValid(false);
       setErrorMessage(error.message);
       throw error;
     }
@@ -33,14 +58,60 @@ export function ArrestRequestPage() {
           <p className="text-sm font-semibold uppercase tracking-wide text-red-700">
             Cadeia da festa
           </p>
-          <h1 className="mt-2 text-3xl font-bold">Pedir prisão</h1>
-          <p className="mt-3 text-base text-stone-700">
-            Informe quem deve ir para a cadeia. Cada pedido custa{" "}
-            <strong>{formatCurrencyFromCents(300)}</strong> e vale{" "}
-            <strong>5 minutos</strong>.
-          </p>
+          <h1 className="mt-2 text-3xl font-bold">Registrar prisão</h1>
 
-          <ArrestRequestForm onSubmit={handleSubmit} onSuccess={setCreatedRequest} />
+          {!isVoucherValid && !createdRequest ? (
+            <form
+              className="mt-6 space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                checkVoucher();
+              }}
+            >
+              <p className="rounded-md bg-amber-50 px-3 py-3 text-sm leading-5 text-stone-700">
+                Primeiro faça o pagamento na cadeia. Depois, digite o código que o atendente entregar.
+              </p>
+              <label className="block">
+                <span className="text-sm font-semibold text-stone-800">Código do vale pago</span>
+                <input
+                  className="mt-2 w-full rounded-md border border-stone-300 px-4 py-3 text-center text-xl font-black uppercase tracking-[0.25em] outline-none focus:border-red-700 focus:ring-2 focus:ring-red-100"
+                  type="text"
+                  value={voucherCode}
+                  onChange={(event) => {
+                    setVoucherCode(event.target.value.toUpperCase());
+                    setIsVoucherValid(false);
+                    setErrorMessage(null);
+                  }}
+                  placeholder="ABC123"
+                  autoCapitalize="characters"
+                  autoComplete="one-time-code"
+                  maxLength="6"
+                  required
+                />
+              </label>
+              <button
+                className="w-full rounded-md bg-stone-900 px-4 py-3 font-bold text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-400"
+                type="submit"
+                disabled={isCheckingVoucher}
+              >
+                {isCheckingVoucher ? "Verificando..." : "Continuar"}
+              </button>
+            </form>
+          ) : null}
+
+          {isVoucherValid && !createdRequest ? (
+            <>
+              <div className="mt-5 rounded-md bg-green-50 px-3 py-3 text-sm font-medium text-green-900 ring-1 ring-green-200">
+                Pagamento confirmado. Agora registre a pessoa procurada.
+              </div>
+              <ArrestRequestForm
+                onSubmit={handleSubmit}
+                submitLabel="Enviar pedido pago"
+                submittingLabel="Enviando pedido..."
+                onSuccess={setCreatedRequest}
+              />
+            </>
+          ) : null}
 
           {errorMessage && (
             <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-800">
@@ -50,8 +121,8 @@ export function ArrestRequestPage() {
 
           {createdRequest && (
             <div className="mt-4 rounded-md bg-green-50 px-3 py-2 text-sm text-green-900">
-              Pedido enviado para o ADM confirmar o pagamento e organizar a
-              prisão de <strong>{createdRequest.targetName}</strong>.
+              Pedido pago enviado para a cadeia organizar a prisão de{" "}
+              <strong>{createdRequest.targetName}</strong>.
             </div>
           )}
         </div>

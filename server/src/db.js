@@ -38,6 +38,17 @@ const CREATE_EVENT_SETTINGS_TABLE = `
   )
 `;
 
+const CREATE_PAYMENT_VOUCHERS_TABLE = `
+  CREATE TABLE IF NOT EXISTS payment_vouchers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT NOT NULL UNIQUE,
+    createdAt TEXT NOT NULL,
+    expiresAt TEXT NOT NULL,
+    usedAt TEXT,
+    arrestRequestId INTEGER
+  )
+`;
+
 function ensureColumn(database, tableName, columnName, definition) {
   const columns = database.prepare(`PRAGMA table_info(${tableName})`).all();
   const hasColumn = columns.some((column) => column.name === columnName);
@@ -52,6 +63,7 @@ export function openDatabase(databasePath = process.env.DATABASE_PATH ?? default
   database.exec(CREATE_QUEUE_ENTRIES_TABLE);
   database.exec(CREATE_ARREST_REQUESTS_TABLE);
   database.exec(CREATE_EVENT_SETTINGS_TABLE);
+  database.exec(CREATE_PAYMENT_VOUCHERS_TABLE);
   ensureColumn(database, "queue_entries", "targetImagePath", "TEXT");
   ensureColumn(database, "arrest_requests", "targetImagePath", "TEXT");
   return database;

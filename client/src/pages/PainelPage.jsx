@@ -20,7 +20,13 @@ function GuestRow({ guest, now }) {
           <span>{guest.guestName}</span>
         </div>
       </td>
-      <td>{isReady ? "Liberado!" : `${remainingMinutes} min`}</td>
+      <td>
+        {isReady ? (
+          <strong className="release-ready-label">Pode soltar agora</strong>
+        ) : (
+          `${remainingMinutes} min`
+        )}
+      </td>
     </tr>
   );
 }

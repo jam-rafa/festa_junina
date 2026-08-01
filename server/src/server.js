@@ -9,6 +9,9 @@ import { QueueRepository } from "./queueRepository.js";
 import { QueueService } from "./queueService.js";
 import { ArrestRequestRepository } from "./arrestRequestRepository.js";
 import { ArrestRequestService } from "./arrestRequestService.js";
+import { PaymentVoucherRepository } from "./paymentVoucherRepository.js";
+import { PaymentVoucherService } from "./paymentVoucherService.js";
+import { PaymentVoucherController } from "./paymentVoucherController.js";
 import { RealtimeGateway } from "./realtimeGateway.js";
 import { QueueController } from "./queueController.js";
 import { ArrestRequestController } from "./arrestRequestController.js";
@@ -27,7 +30,8 @@ function createApp(
   arrestRequestController,
   authController,
   eventSettingsController,
-  authService
+  authService,
+  paymentVoucherController
 ) {
   const app = express();
   app.use(cors());
@@ -43,7 +47,8 @@ function createApp(
       arrestRequestController,
       authController,
       eventSettingsController,
-      authService
+      authService,
+      paymentVoucherController
     )
   );
   app.use(handleRequestErrors);
@@ -53,9 +58,11 @@ function createApp(
 function startServer() {
   const database = openDatabase();
   const queueService = new QueueService(new QueueRepository(database));
+  const paymentVoucherService = new PaymentVoucherService(new PaymentVoucherRepository(database));
   const arrestRequestService = new ArrestRequestService(
     new ArrestRequestRepository(database),
-    queueService
+    queueService,
+    paymentVoucherService
   );
   const eventSettingsService = new EventSettingsService(new EventSettingsRepository(database));
 
@@ -66,6 +73,7 @@ function startServer() {
   const queueController = new QueueController(queueService, realtimeGateway);
   const authController = new AuthController(authService);
   const eventSettingsController = new EventSettingsController(eventSettingsService, realtimeGateway);
+  const paymentVoucherController = new PaymentVoucherController(paymentVoucherService);
   const arrestRequestController = new ArrestRequestController(
     arrestRequestService,
     queueService,
@@ -77,7 +85,8 @@ function startServer() {
       arrestRequestController,
       authController,
       eventSettingsController,
-      authService
+      authService,
+      paymentVoucherController
     )
   );
   socketIoServer.attach(httpServer);

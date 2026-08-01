@@ -86,9 +86,10 @@ export async function fetchArrestRequests() {
   return parseJsonOrThrow(response);
 }
 
-export async function createArrestRequest({ targetName, targetImage }) {
+export async function createArrestRequest({ targetName, targetImage, voucherCode }) {
   const formData = new FormData();
   formData.append("targetName", targetName);
+  formData.append("voucherCode", voucherCode);
   if (targetImage) {
     formData.append("targetImage", targetImage);
   }
@@ -96,6 +97,38 @@ export async function createArrestRequest({ targetName, targetImage }) {
   const response = await fetch(`${API_BASE_PATH}/arrest-requests`, {
     method: "POST",
     body: formData,
+  });
+  return parseJsonOrThrow(response);
+}
+
+export async function createAdminArrestRequest({ targetName, targetImage }) {
+  const formData = new FormData();
+  formData.append("targetName", targetName);
+  if (targetImage) {
+    formData.append("targetImage", targetImage);
+  }
+
+  const response = await fetch(`${API_BASE_PATH}/arrest-requests/admin`, {
+    method: "POST",
+    headers: getAdminHeaders(),
+    body: formData,
+  });
+  return parseJsonOrThrow(response);
+}
+
+export async function validatePaymentVoucher(code) {
+  const response = await fetch(`${API_BASE_PATH}/payment-vouchers/validate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  return parseJsonOrThrow(response);
+}
+
+export async function createPaymentVoucher() {
+  const response = await fetch(`${API_BASE_PATH}/payment-vouchers`, {
+    method: "POST",
+    headers: getAdminHeaders(),
   });
   return parseJsonOrThrow(response);
 }

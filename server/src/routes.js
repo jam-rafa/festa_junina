@@ -7,7 +7,8 @@ export function createApiRouter(
   arrestRequestController,
   authController,
   eventSettingsController,
-  authService
+  authService,
+  paymentVoucherController
 ) {
   const router = Router();
   const adminOnly = requireAdmin(authService);
@@ -20,10 +21,19 @@ export function createApiRouter(
     attachUploadedImagePath,
     arrestRequestController.createRequest
   );
+  router.post("/payment-vouchers/validate", paymentVoucherController.validateVoucher);
   router.get("/event-screen/banner", eventSettingsController.getScreenBanner);
 
   router.get("/arrest-requests", adminOnly, arrestRequestController.listRequests);
+  router.post(
+    "/arrest-requests/admin",
+    adminOnly,
+    uploadArrestRequestImage,
+    attachUploadedImagePath,
+    arrestRequestController.createAdminRequest
+  );
   router.post("/queue", adminOnly, queueController.addGuest);
+  router.post("/payment-vouchers", adminOnly, paymentVoucherController.createPaidVoucher);
   router.put("/queue/:id", adminOnly, queueController.updateGuest);
   router.delete("/queue/:id", adminOnly, queueController.removeGuest);
   router.put("/event-screen/banner", adminOnly, eventSettingsController.updateScreenBanner);

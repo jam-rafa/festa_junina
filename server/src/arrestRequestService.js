@@ -43,9 +43,10 @@ function assertPendingRequest(request) {
 }
 
 export class ArrestRequestService {
-  constructor(arrestRequestRepository, queueService) {
+  constructor(arrestRequestRepository, queueService, paymentVoucherService = null) {
     this.arrestRequestRepository = arrestRequestRepository;
     this.queueService = queueService;
+    this.paymentVoucherService = paymentVoucherService;
   }
 
   createRequest({ targetName, targetImagePath }) {
@@ -58,6 +59,42 @@ export class ArrestRequestService {
       durationMinutes: ARREST_REQUEST_DURATION_MINUTES,
       paymentStatus: PAYMENT_STATUS.PENDING,
       createdAt: new Date().toISOString(),
+    });
+  }
+
+  createPaidRequest({ targetName, targetImagePath, voucherCode }) {
+    assertValidTargetName(targetName);
+    if (!this.paymentVoucherService) {
+      throw new ValidationError("Os vales de pagamento não estão disponíveis");
+    }
+
+    return this.paymentVoucherService.redeemVoucher(voucherCode ?? "", () =>
+      this.arrestRequestRepository.create({
+        targetName: targetName.trim(),
+        targetImagePath: normalizeTargetImagePath(targetImagePath),
+        status: REQUEST_STATUS.PENDING,
+        priceCents: ARREST_REQUEST_PRICE_CENTS,
+        durationMinutes: ARREST_REQUEST_DURATION_MINUTES,
+        paymentStatus: PAYMENT_STATUS.CONFIRMED,
+        createdAt: new Date().toISOString(),
+        paidAt: new Date().toISOString(),
+      })
+    );
+  }
+
+  createAdminPaidRequest({ targetName, targetImagePath }) {
+    assertValidTargetName(targetName);
+    const paidAt = new Date().toISOString();
+
+    return this.arrestRequestRepository.create({
+      targetName: targetName.trim(),
+      targetImagePath: normalizeTargetImagePath(targetImagePath),
+      status: REQUEST_STATUS.PENDING,
+      priceCents: ARREST_REQUEST_PRICE_CENTS,
+      durationMinutes: ARREST_REQUEST_DURATION_MINUTES,
+      paymentStatus: PAYMENT_STATUS.CONFIRMED,
+      createdAt: paidAt,
+      paidAt,
     });
   }
 

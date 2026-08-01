@@ -90,6 +90,7 @@ export function ArrestRequestForm({
           className="mt-2 w-full rounded-md border border-dashed border-stone-300 bg-white px-4 py-3 text-sm font-semibold text-stone-700 outline-none file:mr-3 file:rounded-md file:border-0 file:bg-stone-900 file:px-3 file:py-2 file:text-sm file:font-bold file:text-white focus:border-red-700 focus:ring-2 focus:ring-red-100"
           type="file"
           accept={ACCEPTED_IMAGE_TYPES}
+          capture="user"
           onChange={handleImageChange}
         />
       </label>
