@@ -6,7 +6,9 @@ import multer from "multer";
 import { ValidationError } from "./errors.js";
 import {
   arrestRequestImagesPath,
+  eventScreenBannersPath,
   ensureUploadDirectories,
+  toPublicEventScreenBannerPath,
   toPublicUploadPath,
 } from "./uploadStorage.js";
 
@@ -50,10 +52,31 @@ const upload = multer({
 
 export const uploadArrestRequestImage = upload.single("targetImage");
 
+const bannerUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_request, _file, callback) => callback(null, eventScreenBannersPath),
+    filename: (_request, file, callback) => {
+      const extension = ALLOWED_IMAGE_TYPES.get(file.mimetype) || path.extname(file.originalname);
+      callback(null, `${crypto.randomUUID()}${extension}`);
+    },
+  }),
+  fileFilter,
+  limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: 1 },
+});
+
+export const uploadEventScreenBannerImage = bannerUpload.single("bannerImage");
+
 export function attachUploadedImagePath(request, response, next) {
   if (request.file) {
     request.body.targetImagePath = toPublicUploadPath(request.file.filename);
   }
 
+  next();
+}
+
+export function attachUploadedEventScreenBannerPath(request, _response, next) {
+  if (request.file) {
+    request.body.imagePath = toPublicEventScreenBannerPath(request.file.filename);
+  }
   next();
 }

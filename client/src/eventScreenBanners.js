@@ -59,9 +59,9 @@ function buildEventScreenBanners() {
 
 export const EVENT_SCREEN_BANNERS = buildEventScreenBanners();
 
-export function findEventScreenBannerById(bannerId) {
+export function findEventScreenBannerById(bannerId, banners = EVENT_SCREEN_BANNERS) {
   return (
-    EVENT_SCREEN_BANNERS.find((banner) => banner.id === bannerId) ??
-    EVENT_SCREEN_BANNERS[0]
+    banners.find((banner) => banner.id === bannerId) ??
+    banners[0]
   );
 }

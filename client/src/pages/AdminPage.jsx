@@ -15,7 +15,7 @@ import {
   reuseArrestRequestImage,
   updateGuestInQueue,
 } from "../api/queueApi.js";
-import { updateEventScreenBanner } from "../api/eventScreenApi.js";
+import { deleteEventScreenBanner, updateEventScreenBanner, uploadEventScreenBanner } from "../api/eventScreenApi.js";
 import { ArrestRequestForm } from "../components/ArrestRequestForm.jsx";
 import {
   EVENT_SCREEN_BANNERS,
@@ -453,7 +453,7 @@ function NewGuestForm({ onError }) {
 }
 
 function EventScreenBannerForm({ onError }) {
-  const { bannerId } = useEventScreenBanner();
+  const { bannerId, banners, refreshBanners } = useEventScreenBanner();
   const [selectedBannerId, setSelectedBannerId] = useState(bannerId);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -461,7 +461,28 @@ function EventScreenBannerForm({ onError }) {
     setSelectedBannerId(bannerId);
   }, [bannerId]);
 
-  const selectedBanner = findEventScreenBannerById(selectedBannerId);
+  const selectedBanner = findEventScreenBannerById(selectedBannerId, banners);
+
+  async function handleUpload(event) {
+    const image = event.target.files?.[0];
+    if (!image) return;
+    setIsSubmitting(true);
+    try { await uploadEventScreenBanner(image); await refreshBanners(); onError(null); }
+    catch (error) { onError(error.message); }
+    finally { setIsSubmitting(false); event.target.value = ""; }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm("Excluir este banner personalizado?")) return;
+    setIsSubmitting(true);
+    try {
+      await deleteEventScreenBanner(id);
+      await refreshBanners();
+      if (selectedBannerId === id) setSelectedBannerId(bannerId);
+      onError(null);
+    } catch (error) { onError(error.message); }
+    finally { setIsSubmitting(false); }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -485,11 +506,11 @@ function EventScreenBannerForm({ onError }) {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
-        {EVENT_SCREEN_BANNERS.map((banner) => {
+        {banners.map((banner) => {
           const isSelected = banner.id === selectedBannerId;
 
           return (
-            <label
+            <div
               key={banner.id}
               className={
                 isSelected
@@ -497,6 +518,7 @@ function EventScreenBannerForm({ onError }) {
                   : "cursor-pointer rounded-lg border border-stone-200 bg-white p-2"
               }
             >
+              <label className="block cursor-pointer">
               <input
                 className="sr-only"
                 type="radio"
@@ -511,10 +533,17 @@ function EventScreenBannerForm({ onError }) {
                 aria-hidden="true"
               />
               <p className="mt-1 truncate text-xs font-bold text-stone-950">{banner.label}</p>
-            </label>
+              </label>
+              {banner.removable ? <button className="mt-2 w-full rounded-md border border-red-200 px-2 py-1 text-xs font-bold text-red-700" type="button" onClick={() => handleDelete(banner.id)}>Excluir</button> : null}
+            </div>
           );
         })}
       </div>
+
+      <label className="mt-3 block rounded-md border border-dashed border-stone-300 px-3 py-3 text-center text-sm font-bold text-stone-700">
+        {isSubmitting ? "Enviando..." : "Adicionar imagem de fundo"}
+        <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleUpload} disabled={isSubmitting} />
+      </label>
 
       <div className="mt-3">
         <AdminButton

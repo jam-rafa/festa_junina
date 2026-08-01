@@ -49,6 +49,15 @@ const CREATE_PAYMENT_VOUCHERS_TABLE = `
   )
 `;
 
+const CREATE_EVENT_SCREEN_BANNERS_TABLE = `
+  CREATE TABLE IF NOT EXISTS event_screen_banners (
+    id TEXT PRIMARY KEY,
+    label TEXT NOT NULL,
+    imagePath TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  )
+`;
+
 function ensureColumn(database, tableName, columnName, definition) {
   const columns = database.prepare(`PRAGMA table_info(${tableName})`).all();
   const hasColumn = columns.some((column) => column.name === columnName);
@@ -64,6 +73,7 @@ export function openDatabase(databasePath = process.env.DATABASE_PATH ?? default
   database.exec(CREATE_ARREST_REQUESTS_TABLE);
   database.exec(CREATE_EVENT_SETTINGS_TABLE);
   database.exec(CREATE_PAYMENT_VOUCHERS_TABLE);
+  database.exec(CREATE_EVENT_SCREEN_BANNERS_TABLE);
   ensureColumn(database, "queue_entries", "targetImagePath", "TEXT");
   ensureColumn(database, "arrest_requests", "targetImagePath", "TEXT");
   return database;

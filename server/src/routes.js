@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAdmin } from "./authMiddleware.js";
-import { attachUploadedImagePath, uploadArrestRequestImage } from "./uploadMiddleware.js";
+import { attachUploadedEventScreenBannerPath, attachUploadedImagePath, uploadArrestRequestImage, uploadEventScreenBannerImage } from "./uploadMiddleware.js";
 
 export function createApiRouter(
   queueController,
@@ -23,6 +23,7 @@ export function createApiRouter(
   );
   router.post("/payment-vouchers/validate", paymentVoucherController.validateVoucher);
   router.get("/event-screen/banner", eventSettingsController.getScreenBanner);
+  router.get("/event-screen/banners", eventSettingsController.listCustomScreenBanners);
 
   router.get("/arrest-requests", adminOnly, arrestRequestController.listRequests);
   router.post(
@@ -37,6 +38,8 @@ export function createApiRouter(
   router.put("/queue/:id", adminOnly, queueController.updateGuest);
   router.delete("/queue/:id", adminOnly, queueController.removeGuest);
   router.put("/event-screen/banner", adminOnly, eventSettingsController.updateScreenBanner);
+  router.post("/event-screen/banners", adminOnly, uploadEventScreenBannerImage, attachUploadedEventScreenBannerPath, eventSettingsController.createCustomScreenBanner);
+  router.delete("/event-screen/banners/:id", adminOnly, eventSettingsController.deleteCustomScreenBanner);
   router.post("/arrest-requests/:id/confirm-payment", adminOnly, arrestRequestController.confirmPayment);
   router.post("/arrest-requests/:id/reuse-image", adminOnly, arrestRequestController.reuseImage);
   router.post("/arrest-requests/:id/accept", adminOnly, arrestRequestController.acceptRequest);

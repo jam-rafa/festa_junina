@@ -68,9 +68,9 @@ function WantedMural({ requests }) {
 }
 
 export function EventScreenPage() {
-  const { bannerId } = useEventScreenBanner();
+  const { bannerId, banners } = useEventScreenBanner();
   const { announcement, muralRequests } = useArrestRequestAnnouncement();
-  const selectedBanner = findEventScreenBannerById(bannerId);
+  const selectedBanner = findEventScreenBannerById(bannerId, banners);
   const eventScreenStyle = {
     backgroundImage: `url(${selectedBanner.imageUrl})`,
   };

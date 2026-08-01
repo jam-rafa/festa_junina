@@ -30,3 +30,21 @@ export async function updateEventScreenBanner({ bannerId }) {
 
   return parseJsonOrThrow(response);
 }
+
+export async function fetchCustomEventScreenBanners() {
+  const response = await fetch(`${API_BASE_PATH}/event-screen/banners`);
+  return parseJsonOrThrow(response);
+}
+
+export async function uploadEventScreenBanner(image) {
+  const formData = new FormData();
+  formData.append("bannerImage", image);
+  formData.append("label", image.name.replace(/\.[^.]+$/, ""));
+  const response = await fetch(`${API_BASE_PATH}/event-screen/banners`, { method: "POST", headers: getAdminHeaders(), body: formData });
+  return parseJsonOrThrow(response);
+}
+
+export async function deleteEventScreenBanner(id) {
+  const response = await fetch(`${API_BASE_PATH}/event-screen/banners/${id}`, { method: "DELETE", headers: getAdminHeaders() });
+  return parseJsonOrThrow(response);
+}

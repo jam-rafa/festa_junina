@@ -18,6 +18,7 @@ import { ArrestRequestController } from "./arrestRequestController.js";
 import { AuthController } from "./authController.js";
 import { AuthService } from "./authService.js";
 import { EventSettingsRepository } from "./eventSettingsRepository.js";
+import { EventScreenBannerRepository } from "./eventScreenBannerRepository.js";
 import { EventSettingsService } from "./eventSettingsService.js";
 import { EventSettingsController } from "./eventSettingsController.js";
 import { createApiRouter } from "./routes.js";
@@ -64,7 +65,7 @@ function startServer() {
     queueService,
     paymentVoucherService
   );
-  const eventSettingsService = new EventSettingsService(new EventSettingsRepository(database));
+  const eventSettingsService = new EventSettingsService(new EventSettingsRepository(database), new EventScreenBannerRepository(database));
 
   const socketIoServer = new SocketIoServer({ cors: { origin: "*" } });
   const authService = new AuthService();

@@ -7,13 +7,19 @@ const defaultStoragePath = path.join(currentDir, "..", "data", "uploads");
 
 export const uploadStoragePath = process.env.STORAGE_PATH ?? defaultStoragePath;
 export const arrestRequestImagesPath = path.join(uploadStoragePath, "arrest-requests");
+export const eventScreenBannersPath = path.join(uploadStoragePath, "event-screen-banners");
 
 export function ensureUploadDirectories() {
   mkdirSync(arrestRequestImagesPath, { recursive: true });
+  mkdirSync(eventScreenBannersPath, { recursive: true });
 }
 
 export function toPublicUploadPath(filename) {
   return `/uploads/arrest-requests/${filename}`;
+}
+
+export function toPublicEventScreenBannerPath(filename) {
+  return `/uploads/event-screen-banners/${filename}`;
 }
 
 export function removeUploadedFile(filePath) {
