@@ -112,7 +112,7 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-  client_max_body_size 8m;
+  client_max_body_size 0;
 
   location / {
     proxy_pass http://127.0.0.1:8080;

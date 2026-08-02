@@ -12,7 +12,6 @@ import {
   toPublicUploadPath,
 } from "./uploadStorage.js";
 
-const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Map([
   ["image/jpeg", ".jpg"],
   ["image/png", ".png"],
@@ -45,7 +44,6 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: MAX_IMAGE_SIZE_BYTES,
     files: 1,
   },
 });
@@ -61,7 +59,7 @@ const bannerUpload = multer({
     },
   }),
   fileFilter,
-  limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: 1 },
+  limits: { files: 1 },
 });
 
 export const uploadEventScreenBannerImage = bannerUpload.single("bannerImage");

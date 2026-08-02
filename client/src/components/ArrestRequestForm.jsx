@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
 const ACCEPTED_IMAGE_TYPE_LIST = ACCEPTED_IMAGE_TYPES.split(",");
-const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 
 export function ArrestRequestForm({
   onSubmit,
@@ -46,13 +45,6 @@ export function ArrestRequestForm({
       setValidationMessage("Envie uma imagem JPG, PNG ou WebP.");
       return;
     }
-
-//    if (nextImage.size > MAX_IMAGE_SIZE_BYTES) {
-//      setTargetImage(null);
-//      event.target.value = "";
-//      setValidationMessage("A imagem deve ter no máximo 3MB.");
-//      return;
-//    }
 
     setTargetImage(nextImage);
   }
