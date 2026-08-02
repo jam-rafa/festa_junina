@@ -47,12 +47,12 @@ export function ArrestRequestForm({
       return;
     }
 
-    if (nextImage.size > MAX_IMAGE_SIZE_BYTES) {
-      setTargetImage(null);
-      event.target.value = "";
-      setValidationMessage("A imagem deve ter no máximo 3MB.");
-      return;
-    }
+//    if (nextImage.size > MAX_IMAGE_SIZE_BYTES) {
+//      setTargetImage(null);
+//      event.target.value = "";
+//      setValidationMessage("A imagem deve ter no máximo 3MB.");
+//      return;
+//    }
 
     setTargetImage(nextImage);
   }
